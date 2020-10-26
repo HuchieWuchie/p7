@@ -12,7 +12,7 @@ Two terminals.
 
 1: roslaunch quadruped quadruped_controll.launch
 
-2: python3 ui_controller.py
+2: python3 scripts/ui_controller.py
 
 ## To do list:
 
