@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/src
+CMAKE_SOURCE_DIR = /home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build
+CMAKE_BINARY_DIR = /home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build
 
 # Utility rule file for tests.
 
@@ -67,6 +67,6 @@ CMakeFiles/tests.dir/clean:
 .PHONY : CMakeFiles/tests.dir/clean
 
 CMakeFiles/tests.dir/depend:
-	cd /home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/src /home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/src /home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build /home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build /home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build/CMakeFiles/tests.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/src /home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/src /home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build /home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build /home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build/CMakeFiles/tests.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/tests.dir/depend
 

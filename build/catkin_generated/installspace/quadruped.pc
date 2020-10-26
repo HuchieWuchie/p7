@@ -1,4 +1,4 @@
-prefix=/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install
+prefix=/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install
 
 Name: quadruped
 Description: Description of quadruped

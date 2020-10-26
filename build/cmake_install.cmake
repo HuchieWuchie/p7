@@ -1,8 +1,8 @@
-# Install script for directory: /home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/src
+# Install script for directory: /home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/src
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install")
+  set(CMAKE_INSTALL_PREFIX "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -49,103 +49,103 @@ endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install/_setup_util.py")
+   "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install/_setup_util.py")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install" TYPE PROGRAM FILES "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build/catkin_generated/installspace/_setup_util.py")
+file(INSTALL DESTINATION "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install" TYPE PROGRAM FILES "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build/catkin_generated/installspace/_setup_util.py")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install/env.sh")
+   "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install/env.sh")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install" TYPE PROGRAM FILES "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build/catkin_generated/installspace/env.sh")
+file(INSTALL DESTINATION "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install" TYPE PROGRAM FILES "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build/catkin_generated/installspace/env.sh")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install/setup.bash;/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install/local_setup.bash")
+   "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install/setup.bash;/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install/local_setup.bash")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install" TYPE FILE FILES
-    "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build/catkin_generated/installspace/setup.bash"
-    "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build/catkin_generated/installspace/local_setup.bash"
+file(INSTALL DESTINATION "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install" TYPE FILE FILES
+    "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build/catkin_generated/installspace/setup.bash"
+    "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build/catkin_generated/installspace/local_setup.bash"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install/setup.sh;/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install/local_setup.sh")
+   "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install/setup.sh;/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install/local_setup.sh")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install" TYPE FILE FILES
-    "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build/catkin_generated/installspace/setup.sh"
-    "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build/catkin_generated/installspace/local_setup.sh"
+file(INSTALL DESTINATION "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install" TYPE FILE FILES
+    "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build/catkin_generated/installspace/setup.sh"
+    "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build/catkin_generated/installspace/local_setup.sh"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install/setup.zsh;/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install/local_setup.zsh")
+   "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install/setup.zsh;/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install/local_setup.zsh")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install" TYPE FILE FILES
-    "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build/catkin_generated/installspace/setup.zsh"
-    "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build/catkin_generated/installspace/local_setup.zsh"
+file(INSTALL DESTINATION "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install" TYPE FILE FILES
+    "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build/catkin_generated/installspace/setup.zsh"
+    "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build/catkin_generated/installspace/local_setup.zsh"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install/.rosinstall")
+   "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install/.rosinstall")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install" TYPE FILE FILES "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build/catkin_generated/installspace/.rosinstall")
+file(INSTALL DESTINATION "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install" TYPE FILE FILES "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build/catkin_generated/installspace/.rosinstall")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build/catkin_generated/installspace/quadruped.pc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build/catkin_generated/installspace/quadruped.pc")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/quadruped/cmake" TYPE FILE FILES
-    "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build/catkin_generated/installspace/quadrupedConfig.cmake"
-    "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build/catkin_generated/installspace/quadrupedConfig-version.cmake"
+    "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build/catkin_generated/installspace/quadrupedConfig.cmake"
+    "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build/catkin_generated/installspace/quadrupedConfig-version.cmake"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/quadruped" TYPE FILE FILES "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/src/package.xml")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/quadruped" TYPE FILE FILES "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/src/package.xml")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build/gtest/cmake_install.cmake")
+  include("/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build/gtest/cmake_install.cmake")
 
 endif()
 
@@ -157,5 +157,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

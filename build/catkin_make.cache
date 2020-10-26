@@ -1,2 +1,2 @@
 .
--DCATKIN_DEVEL_PREFIX=/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/devel -DCMAKE_INSTALL_PREFIX=/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install -G Unix Makefiles
+-DCATKIN_DEVEL_PREFIX=/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/devel -DCMAKE_INSTALL_PREFIX=/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/install -G Unix Makefiles

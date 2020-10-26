@@ -4,5 +4,5 @@ PROJECT_PKG_CONFIG_INCLUDE_DIRS = "".split(';') if "" != "" else []
 PROJECT_CATKIN_DEPENDS = "".replace(';', ' ')
 PKG_CONFIG_LIBRARIES_WITH_PREFIX = "".split(';') if "" != "" else []
 PROJECT_NAME = "quadruped"
-PROJECT_SPACE_DIR = "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/devel"
+PROJECT_SPACE_DIR = "/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/devel"
 PROJECT_VERSION = "0.0.0"

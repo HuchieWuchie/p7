@@ -39,6 +39,11 @@ def function(id):
 
     elif id == 11:
         quadruped.setLegZ(2, val)
+    elif id == 12:
+        quadruped.gait.setStepSize(val)
+
+    elif id == 13:
+        quadruped.gait.setHeight(val)
     """
     elif id == 3:
         joint_state = quadruped.setRoll(val)
@@ -53,6 +58,7 @@ def function(id):
 
 rospy.init_node('kinematics_node', disable_signals=True)
 quadruped = Quadruped(simulation=False)
+
 
 
 
@@ -72,6 +78,8 @@ labels.append(tk.Label(root, text="Leg front right z: "))
 labels.append(tk.Label(root, text="Leg front left z: "))
 labels.append(tk.Label(root, text="Leg back right z: "))
 labels.append(tk.Label(root, text="Leg back left z: "))
+labels.append(tk.Label(root, text="Step size: "))
+labels.append(tk.Label(root, text="Step height: "))
 
 for i in range(len(labels)):
     labels[i].grid(row=i, column=1)
@@ -88,15 +96,17 @@ joint_sliders.append(tk.Scale((root), from_=-0.4, to=0.4, resolution=0.001, leng
 joint_sliders.append(tk.Scale((root), from_=-0.4, to=0.4, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(4)))
 joint_sliders.append(tk.Scale((root), from_=-0.4, to=0.4, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(5)))
 joint_sliders.append(tk.Scale((root), from_=0, to=1.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(6)))
-joint_sliders.append(tk.Scale((root), from_=0, to=1.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(7)))
+joint_sliders.append(tk.Scale((root), from_=0.0, to=1.5, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(7)))
 joint_sliders.append(tk.Scale((root), from_=-0.52, to=0.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(8)))
-joint_sliders[-1].set(-0.40)
+joint_sliders[-1].set(-0.25)
 joint_sliders.append(tk.Scale((root), from_=-0.52, to=0.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(9)))
-joint_sliders[-1].set(-0.40)
+joint_sliders[-1].set(-0.25)
 joint_sliders.append(tk.Scale((root), from_=-0.52, to=0.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(10)))
-joint_sliders[-1].set(-0.40)
+joint_sliders[-1].set(-0.25)
 joint_sliders.append(tk.Scale((root), from_=-0.52, to=0.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(11)))
-joint_sliders[-1].set(-0.40)
+joint_sliders[-1].set(-0.25)
+joint_sliders.append(tk.Scale((root), from_=0, to=0.5, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(12)))
+joint_sliders.append(tk.Scale((root), from_=0.1, to=1, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(13)))
 for i in range(len(joint_sliders)):
     joint_sliders[i].grid(row=i, column=2)
 

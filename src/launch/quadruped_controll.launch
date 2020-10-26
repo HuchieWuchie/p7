@@ -2,7 +2,7 @@
   <!--
   <arg name="model" default="$(find quadruped)/urdf/quadruped_model.xacro" />
 -->
-  <arg name="model" default="/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/src/urdf/quadruped_model.xacro" />
+  <arg name="model" default="/home/albert/Documents/Aalborg_Universitet/7_Semester/project/github/p7/src/urdf/quadruped_model.xacro" />
   <arg name="BoxModel" default="/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/src/urdf/box_model.xacro" />
   <arg name="rvizconfig" default="$(find quadruped)/rviz/urdf.rviz" />
 

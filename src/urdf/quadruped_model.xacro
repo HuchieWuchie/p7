@@ -18,7 +18,7 @@
   <xacro:property name="leg1_height" value="${scaling_factor*0.260}" />
   <xacro:property name="leg1_width" value="${scaling_factor*0.03}" />
   <xacro:property name="leg1_depth" value="${scaling_factor*0.03}" />
-  <xacro:property name="leg1_mass" value="${(scaling_factor**3)*0.01}" />
+  <xacro:property name="leg1_mass" value="${(scaling_factor**3)*0.0001}" />
   <xacro:property name="leg1_joint_low" value="${-pi}" />
   <xacro:property name="leg1_joint_high" value="${pi}" />
   <xacro:property name="leg1_init_pitch" value="${0}" /> <!-- 0.9 -->
@@ -26,20 +26,20 @@
   <xacro:property name="leg2_height" value="${scaling_factor*0.025}" />
   <xacro:property name="leg2_width" value="${scaling_factor*0.01}" />
   <xacro:property name="leg2_depth" value="${scaling_factor*0.260}" />
-  <xacro:property name="leg2_mass" value="${(scaling_factor**3)*0.01}" />
+  <xacro:property name="leg2_mass" value="${(scaling_factor**3)*0.00001}" />
   <xacro:property name="leg2_joint_low" value="${-pi}" />
   <xacro:property name="leg2_joint_high" value="${pi}" />
   <xacro:property name="leg2_init_pitch" value="${0}" /> <!-- 0.55+pi -->
 
   <xacro:property name="leg3_height" value="${scaling_factor*0.015}" />
   <xacro:property name="leg3_width" value="${scaling_factor*0.015}" />
-  <xacro:property name="leg3_depth" value="${scaling_factor*0.115}" />
-  <xacro:property name="leg3_mass" value="${(scaling_factor**3)*0.005  }" />
+  <xacro:property name="leg3_depth" value="${scaling_factor*0.215}" />
+  <xacro:property name="leg3_mass" value="${(scaling_factor**3)*0.00005  }" />
   <xacro:property name="leg3_init_pitch" value="${0}" /> <!-- -0.2 -->
   <xacro:property name="leg3_joint_low" value="${-pi/4.0}" />
   <xacro:property name="leg3_joint_high" value="${pi/4.0}" />
 
-  <xacro:property name="leg_tip_mass" value="${(scaling_factor**3)*0.02}" />
+  <xacro:property name="leg_tip_mass" value="${(scaling_factor**3)*0.01}" />
 
   <xacro:property name="servo_vel" value="60" />
   <xacro:property name="servo_effort_limit" value="50" />
@@ -128,7 +128,7 @@
       <axis xyz="0 0 1"/>
       <parent link="base_link"/>
       <child link="${prefix}_${suffix}_leg3"/>
-      <origin xyz="${reflect_right*body_width/2.0} ${(reflect_front*body_length)/2.0} 0" rpy="${1.571} ${(  leg3_init_pitch)} ${reflect_front*pi/2.0 - reflect_front*reflect_right*pi/2.0}"/>
+      <origin xyz="${reflect_right*body_width/2.0} ${(reflect_front*body_length*0.8)/2.0} 0" rpy="${1.571} ${(  leg3_init_pitch)} ${reflect_front*pi/2.0 - reflect_front*reflect_right*pi/2.0}"/>
       <limit lower="${leg3_joint_low}" upper="${leg3_joint_high}" effort="${servo_effort_limit}" velocity="${servo_vel}"/>
       <dynamics friction="0.0" />
     </joint>

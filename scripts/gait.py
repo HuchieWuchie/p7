@@ -11,8 +11,8 @@ class Gait:
         self.t = 0 # paramaterization of gait phase from 0 to 1
         self.frequency = frequency
 
-        self.setHeight(0.15) # currently not used
-        self.setStepSize(0.1) # currently not used
+        self.setHeight(0.2) # currently not used
+        self.setStepSize(0.00) # currently not used
         self.phase = 0
         self.y0 = -legs[0].y_local_goal
         self.y1 = legs[1].y_local_goal
@@ -23,6 +23,7 @@ class Gait:
         self.t1 = 0
         self.t2 = 0
         self.t3 = 0
+        self.i = 0
 
     def setHeight(self, h):
         self.height = h
@@ -37,14 +38,16 @@ class Gait:
         if transl_vel == 0 and ang_vel == 0:
             self.phase = 0
             self.t = 0
+            self.i = 0
             return False, 0, 0, 0, 0
 
         if transl_vel != 0 or ang_vel != 0:
             if self.phase == 0:
                 self.phase = 1
+                self.i = 1
 
 
-        self.transl_vel = transl_vel
+        self.transl_vel = 4*transl_vel
         self.ang_vel = ang_vel
         self.getTResolution()
         self.t = self.t + self.t_res
@@ -56,10 +59,10 @@ class Gait:
         self.y2 = -current_y
         self.y3 = -current_y
 
-        self.t0 += 0.25*self.t_res
-        self.t1 += 0.25*self.t_res
-        self.t2 += 0.25*self.t_res
-        self.t3 += 0.25*self.t_res
+        self.t0 += self.t_res
+        self.t1 += self.t_res
+        self.t2 += self.t_res
+        self.t3 += self.t_res
         if self.t0 > 1.0:
             self.t0 = 1.0
         if self.t1 > 1.0:
@@ -69,46 +72,56 @@ class Gait:
         if self.t3 > 1.0:
             self.t3 = 1.0
 
-        leg0_y0_stand = self.y0+self.stepSize
-        leg0_p0_stand = np.array([leg0_y0_stand, current_z])
-        leg0_p1_stand = np.array([self.y0, current_z])
-        leg0_y, leg0_z = self.bezierCurveCLinear(leg0_p0_stand, leg0_p1_stand, self.t0)
+        legFR = legs[0].computeLocalInverseKinematics(np.array([legs[0].x_local_goal, legs[0].y_local_goal, legs[0].z_local_goal]))
+        legBL = legs[1].computeLocalInverseKinematics(np.array([legs[1].x_local_goal, legs[1].y_local_goal, legs[1].z_local_goal]))
+        legFL = legs[2].computeLocalInverseKinematics(np.array([legs[2].x_local_goal, legs[2].y_local_goal, legs[2].z_local_goal]))
+        legBR = legs[3].computeLocalInverseKinematics(np.array([legs[3].x_local_goal, legs[3].y_local_goal, legs[3].z_local_goal]))
 
-        leg1_y0_stand = self.y1+self.stepSize
-        leg1_p0_stand = np.array([leg1_y0_stand, current_z])
-        leg1_p1_stand = np.array([self.y1, current_z])
-        leg1_y, leg1_z = self.bezierCurveCLinear(leg1_p0_stand, leg1_p1_stand, self.t1)
+        if self.i >= 3:
+            leg0_y0_stand = self.y0+self.stepSize
+            leg0_p0_stand = np.array([leg0_y0_stand, current_z])
+            leg0_p1_stand = np.array([self.y0, current_z])
+            leg0_y, leg0_z = self.bezierCurveCLinear(leg0_p0_stand, leg0_p1_stand, self.t0)
+            legFR = legs[0].computeLocalInverseKinematics(np.array([legs[0].x_local_goal, -leg0_y, leg0_z]))
 
-        leg2_y0_stand = self.y2+self.stepSize
-        leg2_p0_stand = np.array([leg2_y0_stand, current_z])
-        leg2_p1_stand = np.array([self.y2, current_z])
-        leg2_y, leg2_z = self.bezierCurveCLinear(leg2_p0_stand, leg2_p1_stand, self.t2)
+        if self.i >= 2:
+            leg1_y0_stand = self.y1+self.stepSize
+            leg1_p0_stand = np.array([leg1_y0_stand, current_z])
+            leg1_p1_stand = np.array([self.y1, current_z])
+            leg1_y, leg1_z = self.bezierCurveCLinear(leg1_p0_stand, leg1_p1_stand, self.t1)
+            legBL = legs[1].computeLocalInverseKinematics(np.array([legs[1].x_local_goal, leg1_y, leg1_z]))
 
-        leg3_y0_stand = self.y3+self.stepSize
-        leg3_p0_stand = np.array([leg3_y0_stand, current_z])
-        leg3_p1_stand = np.array([self.y3, current_z])
-        leg3_y, leg3_z = self.bezierCurveCLinear(leg3_p0_stand, leg3_p1_stand, self.t3)
+        if self.i >= 1:
+            leg2_y0_stand = self.y2+self.stepSize
+            leg2_p0_stand = np.array([leg2_y0_stand, current_z])
+            leg2_p1_stand = np.array([self.y2, current_z])
+            leg2_y, leg2_z = self.bezierCurveCLinear(leg2_p0_stand, leg2_p1_stand, self.t2)
+            legFL = legs[2].computeLocalInverseKinematics(np.array([legs[2].x_local_goal, leg2_y, leg2_z]))
 
-        legFR = legs[0].computeLocalInverseKinematics(np.array([legs[0].x_local_goal, -leg0_y, leg0_z]))
-        legBL = legs[1].computeLocalInverseKinematics(np.array([legs[1].x_local_goal, leg1_y, leg1_z]))
-        legFL = legs[2].computeLocalInverseKinematics(np.array([legs[2].x_local_goal, leg2_y, leg2_z]))
-        legBR = legs[3].computeLocalInverseKinematics(np.array([legs[3].x_local_goal, -leg3_y, leg3_z]))
+        if self.i > 4:
+            leg3_y0_stand = self.y3+self.stepSize
+            leg3_p0_stand = np.array([leg3_y0_stand, current_z])
+            leg3_p1_stand = np.array([self.y3, current_z])
+            leg3_y, leg3_z = self.bezierCurveCLinear(leg3_p0_stand, leg3_p1_stand, self.t3)
+            legBR = legs[3].computeLocalInverseKinematics(np.array([legs[3].x_local_goal, -leg3_y, leg3_z]))
 
 
         if self.phase > 4:
             self.phase = 1
+
         if self.phase == 1:
             self.leg_swing['front_left'] = True
             legs[0].swing = False
             legs[1].swing = False
             legs[2].swing = True
             legs[3].swing = False
-            if self.t == self.t_res:
-                #self.y2 = legs[2].y_local_goal #-0.1
-                print(self.y2)
+            #xif self.t == self.t_res:
+            #    #self.y2 = legs[2].y_local_goal #-0.1
+                #print(self.y2)
+
             p0 = np.array([self.y2, current_z])
-            p1 = np.array([self.y2-0.15, current_z+self.height])
-            p2 = np.array([self.y2+self.stepSize+0.15, current_z+self.height])
+            p1 = np.array([self.y2, current_z+self.height])
+            p2 = np.array([self.y2+self.stepSize+(0.5*self.stepSize), current_z+self.height])
             p3 = np.array([self.y2+self.stepSize, current_z])
             yz = self.bezierCurveCubic(p0,p1,p2,p3,self.t)
 
@@ -132,8 +145,8 @@ class Gait:
             #if self.t == self.t_res:
             #    self.y1 = legs[1].y_local_goal #-0.1
             p0 = np.array([self.y1, current_z])
-            p1 = np.array([self.y1-0.15, current_z+self.height])
-            p2 = np.array([self.y1+self.stepSize+0.15, current_z+self.height])
+            p1 = np.array([self.y1, current_z+self.height])
+            p2 = np.array([self.y1+self.stepSize+(0.5*self.stepSize), current_z+self.height])
             p3 = np.array([self.y1+self.stepSize, current_z])
             yz = self.bezierCurveCubic(p0,p1,p2,p3,self.t)
 
@@ -145,6 +158,7 @@ class Gait:
                 self.phase += 1
                 self.leg_swing['back_left'] = False
                 legs[1].swing = False
+                self.i += 1
             return self.leg_swing, legFR, legBL, legFL, legBR
 
         elif self.phase == 3:
@@ -157,8 +171,8 @@ class Gait:
             #if self.t == self.t_res:
             #    self.y0 = -legs[0].y_local_goal #-0.1
             p0 = np.array([self.y0, current_z])
-            p1 = np.array([self.y0-0.15, current_z+self.height])
-            p2 = np.array([self.y0+self.stepSize+0.15, current_z+self.height])
+            p1 = np.array([self.y0, current_z+self.height])
+            p2 = np.array([self.y0+self.stepSize+(0.5*self.stepSize), current_z+self.height])
             p3 = np.array([self.y0+self.stepSize, current_z])
             yz = self.bezierCurveCubic(p0,p1,p2,p3,self.t)
 
@@ -170,6 +184,7 @@ class Gait:
                 self.phase += 1
                 self.leg_swing['front_right'] = False
                 legs[0].swing = False
+                self.i += 1
             return self.leg_swing, legFR, legBL, legFL, legBR
 
         elif self.phase == 4:
@@ -181,8 +196,8 @@ class Gait:
             #if self.t == self.t_res:
             #    self.y3 = -legs[3].y_local_goal #-0.1
             p0 = np.array([self.y3, current_z])
-            p1 = np.array([self.y3-0.15, current_z+self.height])
-            p2 = np.array([self.y3+self.stepSize+0.15, current_z+self.height])
+            p1 = np.array([self.y3, current_z+self.height])
+            p2 = np.array([self.y3+self.stepSize+(0.5*self.stepSize), current_z+self.height])
             p3 = np.array([self.y3+self.stepSize, current_z])
             yz = self.bezierCurveCubic(p0,p1,p2,p3,self.t)
 
@@ -194,6 +209,7 @@ class Gait:
                 self.phase += 1
                 self.leg_swing['back_right'] = False
                 legs[3].swing = False
+                self.i += 1
             return self.leg_swing, legFR, legBL, legFL, legBR
 
     def getTResolution(self):
