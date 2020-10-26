@@ -35,6 +35,7 @@ class Gait:
         """ input translational velocity and angular velocity in m/s and rad/s
             output end effector positions for each leg that satisfies that
         """
+        #print(current_z, " \t",current_z+self.height)
         if transl_vel == 0 and ang_vel == 0:
             self.phase = 0
             self.t = 0
@@ -59,10 +60,10 @@ class Gait:
         self.y2 = -current_y
         self.y3 = -current_y
 
-        self.t0 += self.t_res
-        self.t1 += self.t_res
-        self.t2 += self.t_res
-        self.t3 += self.t_res
+        self.t0 += 0.25*self.t_res
+        self.t1 += 0.25*self.t_res
+        self.t2 += 0.25*self.t_res
+        self.t3 += 0.25*self.t_res
         if self.t0 > 1.0:
             self.t0 = 1.0
         if self.t1 > 1.0:

@@ -95,12 +95,12 @@ void setup() {
       dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], 20);//112
     }else if(DXL_ID[i]==11,DXL_ID[i]==17){
       dxl.writeControlTableItem(PROFILE_ACCELERATION, DXL_ID[i], acc_profile);//108
-      dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], 15);//112
+      dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], 20);//112
     
     }
     else{
       dxl.writeControlTableItem(PROFILE_ACCELERATION, DXL_ID[i], acc_profile);//108
-      dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], velocity_profile);//112
+      dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], 20);//112
     }
   }
   
@@ -111,7 +111,7 @@ void setup() {
 }
 
 //This have an impact on trajectories
-int16_t margin_allowed[number_of_motors]={10,40,50,10,40,50,10,40,50,10,40,50};
+int16_t margin_allowed[number_of_motors]={10,20,20,10,20,20,10,20,20,10,20,20};
 
 
 bool newdata=false;

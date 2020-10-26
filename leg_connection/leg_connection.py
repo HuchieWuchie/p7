@@ -8,10 +8,10 @@ class leg_connection:
         self.serial=serial_teensy(serial_name=name_serial_port)
 
         #assigning the offsets
-        self.offset_raw_leg_1=[2500,3080,2520]  #leg 1   Front Right
-        self.offset_raw_leg_2=[1550,1576,2980]  #leg 2  Front Left
-        self.offset_raw_leg_3=[3100,3025,2070]  #leg 3  Back Right
-        self.offset_raw_leg_4=[1050,1500,3590]  #leg 4  Back left
+        self.offset_raw_leg_1=[2600,3080,2520]  #leg 1   Front Right
+        self.offset_raw_leg_2=[1600,1576,2980]  #leg 2  Front Left
+        self.offset_raw_leg_3=[3150,3025,2070]  #leg 3  Back Right
+        self.offset_raw_leg_4=[1100,1500,3590]  #leg 4  Back left
         self.offset_raw=np.append(np.append(np.append(self.offset_raw_leg_1,self.offset_raw_leg_2),self.offset_raw_leg_3),self.offset_raw_leg_4)
 
     def set_offset(self, offset_raw_value):

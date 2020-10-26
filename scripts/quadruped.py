@@ -1,7 +1,10 @@
-import rospy
-from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryActionGoal, FollowJointTrajectoryGoal
-from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-from sensor_msgs.msg import JointState
+using_ROS=False
+if using_ROS:
+    import rospy
+    from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryActionGoal, FollowJointTrajectoryGoal
+    from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+    from sensor_msgs.msg import JointState
+    import rospy
 
 import numpy as np
 import copy
@@ -10,10 +13,11 @@ import cmath
 import transform
 import threading
 import time
-import rospy
 from gait import Gait
 from quadleg import QuadLeg
 from quadbody import QuadBody
+
+from leg_connection import leg_connection
 
 class Quadruped:
 
@@ -42,19 +46,22 @@ class Quadruped:
         self.joint_state[6:9] = self.legs[2].joints
         self.joint_state[9:12] = self.legs[1].joints
 
-        self.joint_state_subscriber = rospy.Subscriber('/quadruped/joint_states',JointState,
-                                                               self.joint_state_subscriber_callback)
+        if using_ROS:
+            self.joint_state_subscriber = rospy.Subscriber('/quadruped/joint_states',JointState,
+                                                                   self.joint_state_subscriber_callback)
+            self.jtp = rospy.Publisher('/quadruped/joint_trajectory_controller/command',JointTrajectory,queue_size=1)
 
         self.global_position = self.computeLocalForwardKinematics()
         self.x_local_goal = self.global_position[0]
         self.y_local_goal = self.global_position[1]
         self.z_local_goal = self.global_position[2]
 
-        self.jtp = rospy.Publisher('/quadruped/joint_trajectory_controller/command',JointTrajectory,queue_size=1)
-        self.gait = Gait(self.legs,frequency = 100)
+        self.gait = Gait(self.legs,frequency = 30)
         self.setTranslationalVelocity(0.0)
         self.setAngularVelocity(0.0)
         self.moveThread = threading.Thread(target=self.move).start()
+
+        self.leg_con = leg_connection(name_serial_port='/dev/tty.usbmodem58778701')
 
     def computeLocalForwardKinematics(self):
         # the COM can be thought of as centered on a plane defined by the global
@@ -93,14 +100,21 @@ class Quadruped:
         while True:
             ts = int(round(time.time() * 1000))
             transl_delta = 0.25*(self.transl_vel / self.gait.frequency)
-            moving, q0,q1,q2,q3 = self.gait.move(self.transl_vel, self.ang_vel, self.legs, self.z_local_goal, self.y_local_goal)
+            moving, q0,q1,q2,q3 = self.gait.move(self.transl_vel, self.ang_vel, self.legs, -0.40,0.1)#self.z_local_goal, self.y_local_goal)
             if moving == False:
                 continue
             joints = np.array([q0,q1,q2,q3])
-            self.sendJointCommand(joints)
-
+            if self.simulation:
+                self.sendJointCommand(joints)
+            else:
+                self.sendJointCommandTeensy(joints)
             te = int(round(time.time() * 1000))
             time.sleep((t_period-((te-ts))*0.001))
+
+    def sendJointCommandTeensy(self,joints):
+        temp=joints
+        radians_array=np.append(np.append(np.append(temp[0],-temp[2]),temp[3]),-temp[1])
+        self.leg_con.execute_joint_position_radians(radians_array)
 
     def sendJointCommand(self, joint_msg):
         joint_name_lst = ['front_right_leg3_joint', 'front_right_leg2_joint', 'front_right_leg1_joint',

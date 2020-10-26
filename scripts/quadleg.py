@@ -38,7 +38,7 @@ class QuadLeg:
 
         self.l1 = 0.05
         self.l2 = 0.26
-        self.l3 = 0.29
+        self.l3 = 0.26
 
         self.__setDHParams()
         self.setJointPositions(self.joints)
