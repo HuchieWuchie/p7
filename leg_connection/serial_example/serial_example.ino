@@ -155,11 +155,11 @@ void loop() {
 
   //Execute commands from the buffer and removes, 
   //if it has been executed.
-  //execute_current_target(motors_targets,current_positions,
-  //                       reference_positions,ready_);
+  execute_current_target(motors_targets,current_positions,
+                         reference_positions,ready_);
   
   //set this delay lower...
-  delay(10);
+  delay(1);
 }
 
 
