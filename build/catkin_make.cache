@@ -1,0 +1,2 @@
+.
+-DCATKIN_DEVEL_PREFIX=/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/devel -DCMAKE_INSTALL_PREFIX=/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install -G Unix Makefiles

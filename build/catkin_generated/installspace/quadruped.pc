@@ -1,0 +1,8 @@
+prefix=/home/albert/Documents/Aalborg_Universitet/7_Semester/project/simulation/install
+
+Name: quadruped
+Description: Description of quadruped
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
