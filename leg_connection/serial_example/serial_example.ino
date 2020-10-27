@@ -112,7 +112,7 @@ void setup() {
 }
 
 //This have an impact on trajectories
-int16_t margin_allowed[number_of_motors]={10,20,20,10,20,20,10,20,20,10,20,20};
+int16_t margin_allowed[number_of_motors]={10,40,40,10,40,40,10,40,40,10,40,40};
 
 
 bool newdata=false;
