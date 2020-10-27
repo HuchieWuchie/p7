@@ -60,8 +60,8 @@ class Quadruped:
         self.setTranslationalVelocity(0.0)
         self.setAngularVelocity(0.0)
         self.moveThread = threading.Thread(target=self.move).start()
-
-        self.leg_con = leg_connection(name_serial_port='/dev/tty.usbmodem58778701')
+        if self.simulation!=True:
+            self.leg_con = leg_connection(name_serial_port='/dev/tty.usbmodem58778701')
 
     def computeLocalForwardKinematics(self):
         # the COM can be thought of as centered on a plane defined by the global
@@ -104,19 +104,24 @@ class Quadruped:
             if moving == False:
                 continue
             joints = np.array([q0,q1,q2,q3])
-            if self.simulation:
-                self.sendJointCommand(joints)
-            else:
-                self.sendJointCommandTeensy(joints)
+            self.sendJointCommand(joints)
             te = int(round(time.time() * 1000))
             time.sleep((t_period-((te-ts))*0.001))
 
+    ###Have made this large modification to the program::
+    def sendJointCommand(self,joints):
+        if self.simulation:
+            self.sendJointCommandRos(joints)
+        else:
+            self.sendJointCommandTeensy(joints)
+
     def sendJointCommandTeensy(self,joints):
+        #### implemented timing, to not "overspam" the port:
         temp=joints
         radians_array=np.append(np.append(np.append(temp[0],-temp[2]),temp[3]),-temp[1])
         self.leg_con.execute_joint_position_radians(radians_array)
 
-    def sendJointCommand(self, joint_msg):
+    def sendJointCommandRos(self, joint_msg):
         joint_name_lst = ['front_right_leg3_joint', 'front_right_leg2_joint', 'front_right_leg1_joint',
                                        'front_left_leg3_joint', 'front_left_leg2_joint', 'front_left_leg1_joint',
                                        'back_right_leg3_joint', 'back_right_leg2_joint','back_right_leg1_joint',
@@ -234,6 +239,7 @@ class Quadruped:
                         self.legs[3].x_local_goal = x
 
         q = np.array(q)
+
         self.sendJointCommand(q)
 
     def setY(self, y):
@@ -261,6 +267,7 @@ class Quadruped:
                         self.y_local_goal = y
 
         q = np.array(q)
+
         self.sendJointCommand(q)
 
     def setZ(self, z):
@@ -288,6 +295,7 @@ class Quadruped:
                         self.z_local_goal = z
 
         q = np.array(q)
+
         self.sendJointCommand(q)
 
     def setRoll(self, ang):
@@ -359,6 +367,7 @@ class Quadruped:
             self.legs[2].z_local_goal = z
         elif leg == 4:
             self.legs[3].z_local_goal = z
+
 
         self.sendJointCommand(joints)
 

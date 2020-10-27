@@ -1,12 +1,17 @@
 import tkinter as tk
-import rospy
-from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryActionGoal, FollowJointTrajectoryGoal
-from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
-from sensor_msgs.msg import JointState
+#import rospy
+#from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryActionGoal, FollowJointTrajectoryGoal
+#from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+#from sensor_msgs.msg import JointState
 
 import numpy as np
 from math import pi
-
+import os
+import sys
+os.chdir("../leg_connection")
+path=os.getcwd()
+# insert at 1, 0 is the script path (or '' in REPL)
+sys.path.insert(1, path)
 from quadruped import Quadruped
 from transform import *
 
@@ -56,7 +61,7 @@ def function(id):
     """
 
 
-rospy.init_node('kinematics_node', disable_signals=True)
+#rospy.init_node('kinematics_node', disable_signals=True)
 quadruped = Quadruped(simulation=False)
 
 

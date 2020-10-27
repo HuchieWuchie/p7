@@ -78,7 +78,7 @@ void setup() {
   setup_bulk_write();
 
   //Setting the profile
-  int16_t velocity_profile=10;
+  int16_t velocity_profile=20;
   int16_t acc_profile=0;
   for(int i=0;i<number_of_motors;i++){
     //change_reverse_mode(false,9);
@@ -92,17 +92,18 @@ void setup() {
       //dxl.writeControlTableItem(PROFILE_ACCELERATION, DXL_ID[i], acc_profile);//108
       //dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], 10);//112
       dxl.writeControlTableItem(PROFILE_ACCELERATION, DXL_ID[i], acc_profile);//108
-      dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], 20);//112
+      dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], velocity_profile);//112
     }else if(DXL_ID[i]==11,DXL_ID[i]==17){
       dxl.writeControlTableItem(PROFILE_ACCELERATION, DXL_ID[i], acc_profile);//108
-      dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], 20);//112
+      dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], velocity_profile);//112
     
     }
     else{
       dxl.writeControlTableItem(PROFILE_ACCELERATION, DXL_ID[i], acc_profile);//108
-      dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], 20);//112
+      dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], velocity_profile);//112
     }
   }
+  set_position_gain(1000);
   
   //Serial port setup. This baudrate does not matter, teensy always uses 
   //120000
@@ -128,10 +129,11 @@ bool ready_=true;
 
 
 
+
 void loop() {
   //updating the current positions
 
-
+  //read_position_gain();
   //ping_all_motors();
   //delay(2000);
   //Serial.println(dxl.getPort());

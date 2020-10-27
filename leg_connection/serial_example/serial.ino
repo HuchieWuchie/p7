@@ -117,9 +117,6 @@ void setup_bulk_write(){
   bw_infos.is_info_changed = true;
 }
 
-
-
-
 //It is changed to bulk read here.
 void read_from_all_motors(int32_t current_pos[]){
   //change to bulk read here
@@ -253,6 +250,25 @@ void ping_all_motors(){
     ping_example(i);
   }
 }
+
+
+//Example used to read position gain from motors
+void set_position_gain(int16_t gain_){
+    for(int i=0;i<12;i++){
+    dxl.writeControlTableItem(POSITION_P_GAIN, DXL_ID[i],gain_);//112
+  }
+}
+
+//Example used to read position gain from motors
+void read_position_gain(){
+    for(int i=0;i<12;i++){
+    Serial.print("Motor   ");Serial.print(DXL_ID[i]);
+    Serial.print("  gain  ");
+    Serial.println(dxl.readControlTableItem(POSITION_P_GAIN, DXL_ID[i]));//112
+  }
+}
+
+
 
 //example used to ping the motors
 bool ping_example(int8_t id){

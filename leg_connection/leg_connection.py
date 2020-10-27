@@ -8,10 +8,10 @@ class leg_connection:
         self.serial=serial_teensy(serial_name=name_serial_port)
 
         #assigning the offsets
-        self.offset_raw_leg_1=[2600,3080,2520]  #leg 1   Front Right
-        self.offset_raw_leg_2=[1600,1576,2980]  #leg 2  Front Left
-        self.offset_raw_leg_3=[3150,3025,2070]  #leg 3  Back Right
-        self.offset_raw_leg_4=[1100,1500,3590]  #leg 4  Back left
+        self.offset_raw_leg_1=[2625,3074,2520]  #leg 1   Front Right
+        self.offset_raw_leg_2=[1500,1540,3020]  #leg 2  Front Left    1566,3000]
+        self.offset_raw_leg_3=[3150,3022,2070]  #leg 3  Back Right
+        self.offset_raw_leg_4=[1000,1500,3590]  #leg 4  Back left
         self.offset_raw=np.append(np.append(np.append(self.offset_raw_leg_1,self.offset_raw_leg_2),self.offset_raw_leg_3),self.offset_raw_leg_4)
 
     def set_offset(self, offset_raw_value):
@@ -37,8 +37,10 @@ class leg_connection:
     ###### The array of foot sensors are numerated as:
     ###### 0 is front right, 1 is front left, 2 is back right, 3 is back left.
     def read_leg_status(self):
-        status=self.offset_raw#self.serial.read_status()
+        status=self.serial.read_status()
+        print(status)
         pos_raw=self.serial.convert_rawvalue_2_radians(np.asarray(status)[0:12]-self.offset_raw)
+
         foot_sensors=np.asarray(status)[12:16]
         return pos_raw,foot_sensors
 
