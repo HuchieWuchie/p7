@@ -9,7 +9,7 @@ class leg_connection:
 
         #assigning the offsets
         self.offset_raw_leg_1=[2650,3074,2520]  #leg 1   Front Right zero 1 is 2625
-        self.offset_raw_leg_2=[1500,1540,3020]  #leg 2  Front Left   zero is 1500
+        self.offset_raw_leg_2=[1480,1540,3020]  #leg 2  Front Left   zero is 1500
         self.offset_raw_leg_3=[3200,3022,2070]  #leg 3  Back Right    3150
         self.offset_raw_leg_4=[1050,1500,3590]  #leg 4  Back left     1000
         self.offset_raw=np.append(np.append(np.append(self.offset_raw_leg_1,self.offset_raw_leg_2),self.offset_raw_leg_3),self.offset_raw_leg_4)

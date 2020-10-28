@@ -268,7 +268,13 @@ void read_position_gain(){
   }
 }
 
-
+void read_position_current(){
+    for(int i=0;i<12;i++){
+    Serial.print("Motor   ");Serial.print(DXL_ID[i]);
+    Serial.print("  gain  ");
+    Serial.println(dxl.getPresentCurrent(DXL_ID[i]));//112
+  }
+}
 
 //example used to ping the motors
 bool ping_example(int8_t id){

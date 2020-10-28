@@ -23,6 +23,7 @@ class Quadruped:
 
     def __init__(self, simulation=False):
 
+
         self.simulation = simulation
         self.body = QuadBody()
         self.joint_state = np.zeros(12)
@@ -56,12 +57,15 @@ class Quadruped:
         self.y_local_goal = self.global_position[1]
         self.z_local_goal = self.global_position[2]
 
-        self.gait = Gait(self.legs,frequency = 30)
+        ###the frequency now needs to be specified here.
+        self.frequency=30
+        self.gait = Gait(self.legs,frequency = self.frequency)
         self.setTranslationalVelocity(0.0)
         self.setAngularVelocity(0.0)
         self.moveThread = threading.Thread(target=self.move).start()
         if self.simulation!=True:
             self.leg_con = leg_connection(name_serial_port='/dev/tty.usbmodem58778701')
+            self.time_frequency = time.time()
 
     def computeLocalForwardKinematics(self):
         # the COM can be thought of as centered on a plane defined by the global
@@ -116,10 +120,19 @@ class Quadruped:
             self.sendJointCommandTeensy(joints)
 
     def sendJointCommandTeensy(self,joints):
-        #### implemented timing, to not "overspam" the port:
-        temp=joints
-        radians_array=np.append(np.append(np.append(temp[0],-temp[2]),temp[3]),-temp[1])
-        self.leg_con.execute_joint_position_radians(radians_array)
+        ##### the frequency checking should probably happen inside the teensy class
+        ##### but is programmed here for "simplicity"-> makes it easer to modify if
+        ##### higher frequency is wanted in e.g. gait.
+        time_step=time.time()-self.time_frequency
+        frequency=1/time_step
+        #margin specified based on the gait....
+        margin = 0.5
+        if frequency<(self.frequency+margin):
+            #### update interface to shoulder joints...
+            temp=joints
+            radians_array=np.append(np.append(np.append(temp[0],-temp[2]),temp[3]),-temp[1])
+            self.leg_con.execute_joint_position_radians(radians_array)
+            self.time_frequency=time.time()
 
     def sendJointCommandRos(self, joint_msg):
         joint_name_lst = ['front_right_leg3_joint', 'front_right_leg2_joint', 'front_right_leg1_joint',

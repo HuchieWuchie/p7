@@ -79,7 +79,7 @@ void setup() {
 
   //Setting the profile
   int16_t velocity_profile=20;
-  int16_t acc_profile=0;
+  int16_t acc_profile=30;
   for(int i=0;i<number_of_motors;i++){
     //change_reverse_mode(false,9);
     dxl.torqueOff(DXL_ID[i]);
@@ -134,6 +134,7 @@ void loop() {
   //updating the current positions
 
   //read_position_gain();
+  read_position_current();
   //ping_all_motors();
   //delay(2000);
   //Serial.println(dxl.getPort());
