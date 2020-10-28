@@ -19,8 +19,9 @@ uint32_t BAUDRATE = 4000000;
 using namespace std;
 
 //Specify number of motors and ids here.
-#define number_of_motors 12 //12
-char buf[number_of_motors*4+1];
+#define number_of_motors 12
+#define number_of_velocities 12
+char buf[number_of_motors*4+1+number_of_velocities*4];
 
 const int32_t DXL_ID[number_of_motors]={15,12,8,3,9,14,6,11,2,1,17,5};
 
@@ -46,6 +47,9 @@ int32_t maxlimit[number_of_motors]={2000,4000,1900};
 //can be initialized with initial positions and be used as reference positions
 //and then be updated from serial. 
 vector<vector<int32_t>> motors_targets(number_of_motors, vector<int32_t>(0));
+vector<vector<int32_t>> motor_velocities_targets(number_of_velocities, vector<int32_t>(0));
+//reference_velocities
+int32_t reference_velocities[number_of_velocities];
 
 int serial_timeout_milis=1;
 
@@ -77,32 +81,23 @@ void setup() {
   set_actuator_limits(minlimit,maxlimit);
   setup_bulk_write();
 
-  //Setting the profile
-  int16_t velocity_profile=20;
-  int16_t acc_profile=30;
+  //Setting tacc profile
+  int16_t acc_profile=60;
   for(int i=0;i<number_of_motors;i++){
-    //change_reverse_mode(false,9);
     dxl.torqueOff(DXL_ID[i]);
     dxl.setOperatingMode(DXL_ID[i], OP_POSITION);
     dxl.torqueOn(DXL_ID[i]);
-    if(DXL_ID[i]==8,DXL_ID[i]==14,DXL_ID[i]==2,DXL_ID[i]==5){
-      //sets the velocity lower for the shoulder
-      //dxl.writeControlTableItem(PROFILE_ACCELERATION, DXL_ID[i], acc_profile);//108
-      //dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], 10);//112
-      //dxl.writeControlTableItem(PROFILE_ACCELERATION, DXL_ID[i], acc_profile);//108
-      //dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], 10);//112
-      dxl.writeControlTableItem(PROFILE_ACCELERATION, DXL_ID[i], acc_profile);//108
-      dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], velocity_profile);//112
-    }else if(DXL_ID[i]==11,DXL_ID[i]==17){
-      dxl.writeControlTableItem(PROFILE_ACCELERATION, DXL_ID[i], acc_profile);//108
-      dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], velocity_profile);//112
-    
-    }
-    else{
-      dxl.writeControlTableItem(PROFILE_ACCELERATION, DXL_ID[i], acc_profile);//108
-      dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], velocity_profile);//112
-    }
+    dxl.writeControlTableItem(PROFILE_ACCELERATION, DXL_ID[i], acc_profile);//108
+    dxl.writeControlTableItem(PROFILE_ACCELERATION, DXL_ID[i], acc_profile);//108
   }
+
+  //the velocity profile now needs to be assigned here.
+  int16_t velocity_profile=20;
+  for(int i=0;i<number_of_velocities;i++){
+     reference_velocities[i]=velocity_profile;
+  }
+  
+  //setting the positional gain
   set_position_gain(1000);
   
   //Serial port setup. This baudrate does not matter, teensy always uses 
@@ -117,25 +112,25 @@ int16_t margin_allowed[number_of_motors]={10,40,40,10,40,40,10,40,40,10,40,40};
 
 bool newdata=false;
 size_t reads=0;
-//bool update_is_allowed();
-//only temporary read array
+//only temporary read arrays
 int32_t array_positions[number_of_motors];
-//array used to store current positions
+int32_t array_velocities[number_of_velocities];
+
+//array used to store current positions and reference velocities
 int32_t current_positions[number_of_motors];
+//contains the reference velocities on the motors.
 //array used to store reference/target positions
 int32_t reference_positions[number_of_motors];
-//should possibly be an array
-bool ready_=true;
-
-
 
 
 void loop() {
   //updating the current positions
-
+  //standard functions used for debug.
+  
   //read_position_gain();
   //read_position_current();
   //ping_all_motors();
+  
   //delay(2000);
   //Serial.println(dxl.getPort());
   
@@ -146,20 +141,25 @@ void loop() {
 
 
   //check if there is update from the serial port;
-  bool inputs=input_from_serial(array_positions);
+  bool inputs=input_from_serial(array_positions,array_velocities);
   if(inputs){
-    //maybe add this directly inside the function
-    append_motor_executes(array_positions,motors_targets);
-    //Serial.print(motors_targets[0][0]);
-    //Serial.println(motors_targets[0].size());
+    //maybe add this directly inside the inpit function.
+    append_motor_executes(array_positions,
+                          array_velocities,
+                          motors_targets,
+                          motor_velocities_targets);
+    
     inputs=false;
   }
 
 
-  //Execute commands from the buffer and removes, 
-  //if it has been executed.
-  execute_current_target(motors_targets,current_positions,
-                         reference_positions,ready_);
+  //Execute commands from the motor and velocity buffer 
+  //and removes, if it has been executed.
+  execute_current_target(motors_targets, 
+                         motor_velocities_targets,  
+                         current_positions,
+                         reference_positions,
+                         reference_velocities);
   
   //set this delay lower...
   delay(1);

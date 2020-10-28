@@ -88,8 +88,45 @@ class serial_teensy:
         else:
             print("array contatins too little numbers")
 
+    def convert_to_send_str_w_vel(self,array_of_numbers):
+        length_array=len(array_of_numbers)
+        string_to_send=""
+
+        #one command to update the velocity on each of the leg.
+        #should possibly be 8.
+        num_velocity_commands=12
+
+        if(length_array == (self.num_ints+num_velocity_commands)):
+            for i in range(0,length_array):
+                if array_of_numbers[i]==0:
+                    string_to_send+="0000"
+                else:
+                    tempstring=str(array_of_numbers[i])
+                    if(len(tempstring)==1):
+                        tempstring ="000"+tempstring
+                        string_to_send += tempstring
+                    elif(len(tempstring)==2):
+                        tempstring = "00" + tempstring
+                        string_to_send += tempstring
+                    elif(len(tempstring)==3):
+                        tempstring = "0" + tempstring
+                        string_to_send += tempstring
+                    else:
+                        string_to_send += tempstring
+            return string_to_send
+        else:
+            print("array contatins inaccurate amount of ints")
+
+
     def send_positions_array_ints(self,array):
         string_to_send=self.convert_to_send_str(array)
+        #print(string_to_send)
+        self.serial_write(string_to_send)
+
+    #### updated function to update the velocity on the motors as well.
+    #### the string should contatin 4 values more.
+    def send_pos_vel_array_ints(self,array):
+        string_to_send=self.convert_to_send_str_w_vel(array)
         #print(string_to_send)
         self.serial_write(string_to_send)
 

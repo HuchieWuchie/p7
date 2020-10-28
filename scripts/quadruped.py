@@ -104,7 +104,7 @@ class Quadruped:
         while True:
             ts = int(round(time.time() * 1000))
             transl_delta = 0.25*(self.transl_vel / self.gait.frequency)
-            moving, q0,q1,q2,q3 = self.gait.move(self.transl_vel, self.ang_vel, self.legs, -0.40,0.1)#self.z_local_goal, self.y_local_goal)
+            moving, q0,q1,q2,q3 = self.gait.move(self.transl_vel, self.ang_vel, self.legs, self.z_local_goal, self.y_local_goal)
             if moving == False:
                 continue
             joints = np.array([q0,q1,q2,q3])
@@ -130,8 +130,17 @@ class Quadruped:
         if frequency<(self.frequency+margin):
             #### update interface to shoulder joints...
             temp=joints
+
+            ####sending with velocities. Note that if sending 0 or above the limit<150, the
+            #### the motors will use the previously used velocity
             radians_array=np.append(np.append(np.append(temp[0],-temp[2]),temp[3]),-temp[1])
-            self.leg_con.execute_joint_position_radians(radians_array)
+            velocities=[20,40,80,20,40,80,20,40,80,20,40,80]
+            self.leg_con.execute_joint_pos_radians_with_vel(radians_array,velocities)
+
+            #sending without velocities
+            #self.leg_con.execute_joint_position_radians(radians_array)
+
+
             self.time_frequency=time.time()
 
     def sendJointCommandRos(self, joint_msg):

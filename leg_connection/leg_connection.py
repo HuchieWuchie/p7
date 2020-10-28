@@ -33,6 +33,15 @@ class leg_connection:
         self.serial.send_positions_array_ints(np.asarray(joint_pos_execute_raw,dtype=np.int64))
     ######## Update this function to check whether it is within the limits or not.
 
+    ####similar to the function above, however this contains velocity updates as well.
+    def execute_joint_pos_radians_with_vel(self,array_of_joint_positions,velocities):
+        joint_pos_raw=self.serial.convert_radians_2_rawvalue(array_of_joint_positions)
+        joint_pos_execute_raw=joint_pos_raw+self.offset_raw
+        full_array=np.append(joint_pos_execute_raw,velocities)
+        self.serial.send_pos_vel_array_ints(np.asarray(full_array,dtype=np.int64))
+
+
+
     ###### Funtion to read status of the legs. It returns an array os joint angles and an array foot sensors
     ###### The array of foot sensors are numerated as:
     ###### 0 is front right, 1 is front left, 2 is back right, 3 is back left.
@@ -43,6 +52,10 @@ class leg_connection:
 
         foot_sensors=np.asarray(status)[12:16]
         return pos_raw,foot_sensors
+
+
+
+
 
 
 
