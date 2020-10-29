@@ -2,36 +2,44 @@ void send_all_positions(int32_t current_pos[],int foot_sensors[]){
   //read_from_all_motors(current_pos);
   String string_to_send="";
   for(int i=0;i<number_of_motors;i++){
-    
-    String temp_str=String(current_pos[i]);
-    int len=temp_str.length();
-    switch(len){
-      case 0:
-        string_to_send+="0000";
-        break;
-      case 1:
-        string_to_send+=("000"+temp_str);
-        break;
-      case 2:
-        string_to_send+=("00"+temp_str);
-        break;
-      case 3:
-        string_to_send+=("0"+temp_str);
-        break;
-      case 4:
-        string_to_send+=temp_str;
-        break;   
-    }
+    string_to_send += value_2_send(current_pos[i]);
   }
   
   for(int i=0;i<number_of_feet_sensors;i++){
-    String temp_str=String(current_pos[i]);
-    string_to_send+=temp_str;
+    if(foot_sensors[i]>0){
+      string_to_send+="1";
+    }else{
+      string_to_send+="0";
+    }
   }
   
   Serial.print(string_to_send);
   Serial.flush();
 }
+
+String value_2_send(int32_t val){
+    String temp_str=String(val);
+    int len=temp_str.length();
+    switch(len){
+      case 0:
+        return "0000";
+        break;
+      case 1:
+        return ("000"+temp_str);
+        break;
+      case 2:
+        return ("00"+temp_str);
+        break;
+      case 3:
+        return ("0"+temp_str);
+        break;
+      case 4:
+        return temp_str;
+        break;   
+    }
+}
+
+
 
 //functions to setup and update the foot sensors:
 void setup_input_sensors_feet(int feet_input_pins[]){

@@ -1,11 +1,11 @@
 import serial
 import numpy as np
 class serial_teensy:
-    def __init__(self,number_of_motors=12,serial_name='/dev/tty.usbmodem58778701'):
-        self.ser = serial.Serial(serial_name, 1200000, timeout=0)
+    def __init__(self,number_of_motors=12,serial_name='/dev/tty.usbmodem58778701',use_velocity=False):
+        self.ser = serial.Serial(serial_name, 1200000, timeout=0.001)
         #Note that teensy always works at this baudrate.
         self.num_ints = number_of_motors
-
+        self.read_velocites=use_velocity
 
     def convert_rawvalue_2_degree(self,rawvalue):
         return np.asarray(rawvalue)*0.088
@@ -30,13 +30,17 @@ class serial_teensy:
         return self.ser.readable()
 
     def serial_reading_line(self):
-        readings=self.ser.read((self.num_ints+1)*4)
+        #reading
+        ####### The 4 added bytes is for the foot sensors.
+        if self.read_velocites:
+            readings=self.ser.read((self.num_ints*2)*4+4)
+        else:
+            readings=self.ser.read((self.num_ints)*4+4)
         #Checking if it is not an "empty" reading from teensy
         if str(readings) != "b\'\'":
             return True,readings.decode('ascii')
         else:
             return False,False
-        #print(readings)
 
     def serial_write(self,output):
         #output=','.join(output)
@@ -46,12 +50,14 @@ class serial_teensy:
             #output[i]=bindigits(output[i],32)
         #binary_array=''.join(chr(b) for b in output)
         #print(binary_array)
+        print(output)
         self.ser.write(str(output).encode('utf-8'))
         self.ser.flush()
 
     def convert_string_to_ints(self,string_of_numbers):
         length=len(string_of_numbers)
         stri=str(string_of_numbers)
+        #print(stri)
         array=[]
         prev_val=0
         for i in range(1,length+1):
@@ -60,7 +66,9 @@ class serial_teensy:
             elif i%4==0:
                 array.append(int(stri[prev_val:i]))
                 prev_val=i
+
         return array
+
 
 
 ##convert to negative values only relevant for velocity if needed.
@@ -143,6 +151,7 @@ class serial_teensy:
         new_array = self.convert_string_to_ints(value)
         #print(new_array)
         return new_array
+
 
     #alternatively while untill new_value is true.
     def issue_reading_command(self):

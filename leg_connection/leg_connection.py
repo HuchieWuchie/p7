@@ -3,9 +3,9 @@ import numpy as np
 
 
 class leg_connection:
-    def __init__(self,name_serial_port='/dev/tty.usbmodem58778701'):
+    def __init__(self,name_serial_port='/dev/tty.usbmodem58778701',use_velocity=False):
         ###### inits the serial connection here. Specify serial name here
-        self.serial=serial_teensy(serial_name=name_serial_port)
+        self.serial=serial_teensy(serial_name=name_serial_port,use_velocity=use_velocity)
 
         #assigning the offsets
         self.offset_raw_leg_1=[2650,3074,2520]  #leg 1   Front Right zero 1 is 2625
@@ -13,6 +13,10 @@ class leg_connection:
         self.offset_raw_leg_3=[3200,3022,2070]  #leg 3  Back Right    3150
         self.offset_raw_leg_4=[1050,1500,3590]  #leg 4  Back left     1000
         self.offset_raw=np.append(np.append(np.append(self.offset_raw_leg_1,self.offset_raw_leg_2),self.offset_raw_leg_3),self.offset_raw_leg_4)
+
+        self.negative_threshold=4092
+
+        self.number_of_motors=12
 
     def set_offset(self, offset_raw_value):
         self.offset_raw = offset_raw_value
@@ -40,22 +44,39 @@ class leg_connection:
         full_array=np.append(joint_pos_execute_raw,velocities)
         self.serial.send_pos_vel_array_ints(np.asarray(full_array,dtype=np.int64))
 
-
+    def execute_joint_velocities(self,array_of_velocities):
+        array_ints_send = self.send_for_negative_values(array_of_velocities)
+        self.serial.send_positions_array_ints(np.asarray(array_ints_send,dtype=np.int64))
 
     ###### Funtion to read status of the legs. It returns an array os joint angles and an array foot sensors
     ###### The array of foot sensors are numerated as:
     ###### 0 is front right, 1 is front left, 2 is back right, 3 is back left.
     def read_leg_status(self):
         status=self.serial.read_status()
-        print(status)
+        #print(status)
         pos_raw=self.serial.convert_rawvalue_2_radians(np.asarray(status)[0:12]-self.offset_raw)
 
         foot_sensors=np.asarray(status)[12:16]
         return pos_raw,foot_sensors
 
+    def read_leg_status_velocity(self):
+        status=self.serial.read_status()
+        pos_raw=self.serial.convert_rawvalue_2_radians(np.asarray(status)[0:self.number_of_motors]-self.offset_raw)
+        vel_raw=self.check_for_negative_values(np.asarray(status)[self.number_of_motors:self.number_of_motors*2])
+        foot_sensors=np.asarray(status)[self.number_of_motors*2:self.number_of_motors*2+4]
+        return pos_raw,vel_raw,foot_sensors
 
+    def check_for_negative_values(self,array):
+        for i in range(0,len(array)):
+            if array[i]>self.negative_threshold:
+                array[i]=-(self.negative_threshold*2-array[i])
+        return array
 
-
+    def send_for_negative_values(self, array):
+        for i in range(0,len(array)):
+            if array[i]<0:
+                array[i]=(self.negative_threshold*2-array[i])
+        return array
 
 
 
