@@ -31,8 +31,8 @@ const int32_t DXL_ID[number_of_motors]={15,12,8,3,9,14,6,11,2,1,17,5};
 //joint number 1 is id 3 joint number 2 is 9 //Joint number 3 defined below
 //const int32_t DXL_ID[number_of_motors]={15,12,8,3,9,14};
 //It is important to specify the limits...
-int32_t minlimit[number_of_motors]={2200,2500,1050,1300,900,1600,2950,2650,600,750,900,2150};
-int32_t maxlimit[number_of_motors]={3000,4000,1900,1800,2600,2400,3500,4000,1430,1300,2500,2950};
+int32_t minlimit[number_of_motors]={3200,1200,600,1300,1250,1080,800,800,2500,750,2260,2000};
+int32_t maxlimit[number_of_motors]={3800,2520,1400,1800,2650,1975,1300,2050,3500,1300,3600,3000};
 
 /*
 //Setup fo Leg number 1 front right leg.
@@ -72,7 +72,7 @@ void setup() {
 
   //setting up bulk read//
   setup_bulk_read();
-
+  
   //set the actuator limits
   set_actuator_limits(minlimit,maxlimit);
   setup_bulk_write();
@@ -138,12 +138,16 @@ void loop() {
   //ping_all_motors();
   //delay(2000);
   //Serial.println(dxl.getPort());
-  
   //function to update all the foor sensors
   update_feet_sensors(feet_touching,feet_input_pins);
   
   read_from_all_motors(current_positions);
-
+  //for(int i=0;i<number_of_motors;i++){
+  //  Serial.print("Motor number ");
+  //  Serial.print(i);
+  //  Serial.print("   ");Serial.println(current_positions[i]);
+  //}
+  
 
   //check if there is update from the serial port;
   bool inputs=input_from_serial(array_positions);

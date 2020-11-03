@@ -50,7 +50,7 @@ class serial_teensy:
             #output[i]=bindigits(output[i],32)
         #binary_array=''.join(chr(b) for b in output)
         #print(binary_array)
-        print(output)
+        #print(output)
         self.ser.write(str(output).encode('utf-8'))
         self.ser.flush()
 

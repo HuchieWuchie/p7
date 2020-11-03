@@ -8,10 +8,10 @@ class leg_connection:
         self.serial=serial_teensy(serial_name=name_serial_port,use_velocity=use_velocity)
 
         #assigning the offsets
-        self.offset_raw_leg_1=[2650,3074,2520]  #leg 1   Front Right zero 1 is 2625
-        self.offset_raw_leg_2=[1480,1540,3020]  #leg 2  Front Left   zero is 1500
-        self.offset_raw_leg_3=[3200,3022,2070]  #leg 3  Back Right    3150
-        self.offset_raw_leg_4=[1050,1500,3590]  #leg 4  Back left     1000
+        self.offset_raw_leg_1=[3675,1507,900+1022] #946 #leg 1   Front Right zero 1 is 2625
+        self.offset_raw_leg_2=[1500,1520,1400+1022] #1488 #leg 2  Front Left   zero is 1500
+        self.offset_raw_leg_3=[1100,997,2957+1022]  #leg 3  Back Right    3150
+        self.offset_raw_leg_4=[1050,2535,2488+1022]  #leg 4  Back left     1000
         self.offset_raw=np.append(np.append(np.append(self.offset_raw_leg_1,self.offset_raw_leg_2),self.offset_raw_leg_3),self.offset_raw_leg_4)
 
         self.negative_threshold=4092
@@ -34,6 +34,7 @@ class leg_connection:
     def execute_joint_position_radians(self,array_of_joint_positions):
         joint_pos_raw=self.serial.convert_radians_2_rawvalue(array_of_joint_positions)
         joint_pos_execute_raw=joint_pos_raw+self.offset_raw
+        print(joint_pos_execute_raw)
         self.serial.send_positions_array_ints(np.asarray(joint_pos_execute_raw,dtype=np.int64))
     ######## Update this function to check whether it is within the limits or not.
 

@@ -134,11 +134,11 @@ class Quadruped:
             ####sending with velocities. Note that if sending 0 or above the limit<150, the
             #### the motors will use the previously used velocity
             radians_array=np.append(np.append(np.append(temp[0],-temp[2]),temp[3]),-temp[1])
-            velocities=[20,40,80,20,40,80,20,40,80,20,40,80]
-            self.leg_con.execute_joint_pos_radians_with_vel(radians_array,velocities)
+            #velocities=[20,40,80,20,40,80,20,40,80,20,40,80]
+            #self.leg_con.execute_joint_pos_radians_with_vel(radians_array,velocities)
 
             #sending without velocities
-            #self.leg_con.execute_joint_position_radians(radians_array)
+            self.leg_con.execute_joint_position_radians(radians_array)
 
 
             self.time_frequency=time.time()
