@@ -55,10 +55,10 @@ class leg_connection:
     def read_leg_status(self):
         status=self.serial.read_status()
         #print(status)
-        pos_raw=self.serial.convert_rawvalue_2_radians(np.asarray(status)[0:12]-self.offset_raw)
+        pos_rad=self.serial.convert_rawvalue_2_radians(np.asarray(status)[0:12]-self.offset_raw)
 
         foot_sensors=np.asarray(status)[12:16]
-        return pos_raw,foot_sensors
+        return pos_rad,foot_sensors
 
     def read_leg_status_velocity(self):
         status=self.serial.read_status()

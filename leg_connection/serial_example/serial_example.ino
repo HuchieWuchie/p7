@@ -103,7 +103,7 @@ void setup() {
       dxl.writeControlTableItem(PROFILE_VELOCITY, DXL_ID[i], velocity_profile);//112
     }
   }
-  set_position_gain(1000);
+  set_position_gain(2000);
   
   //Serial port setup. This baudrate does not matter, teensy always uses 
   //120000

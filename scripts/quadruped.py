@@ -17,6 +17,12 @@ from gait import Gait
 from quadleg import QuadLeg
 from quadbody import QuadBody
 
+
+import os
+import sys
+os.chdir("../leg_connection")
+path=os.getcwd()
+sys.path.insert(1, path)
 from leg_connection import leg_connection
 
 class Quadruped:
@@ -49,7 +55,7 @@ class Quadruped:
 
         if using_ROS:
             self.joint_state_subscriber = rospy.Subscriber('/quadruped/joint_states',JointState,
-                                                                   self.joint_state_subscriber_callback)
+                                                           self.joint_state_subscriber_callback)
             self.jtp = rospy.Publisher('/quadruped/joint_trajectory_controller/command',JointTrajectory,queue_size=1)
 
         self.global_position = self.computeLocalForwardKinematics()
@@ -63,7 +69,7 @@ class Quadruped:
         self.setTranslationalVelocity(0.0)
         self.setAngularVelocity(0.0)
         self.moveThread = threading.Thread(target=self.move).start()
-        if self.simulation!=True:
+        if self.simulation != True:
             self.leg_con = leg_connection(name_serial_port='/dev/tty.usbmodem58778701')
             self.time_frequency = time.time()
 
@@ -392,6 +398,107 @@ class Quadruped:
 
 
         self.sendJointCommand(joints)
+
+    ##could be useful for gait...
+    def setDelta_Y(self, dy):
+
+        q1 = self.legs[0].joints
+        q2 = self.legs[1].joints
+        q3 = self.legs[2].joints
+        q4 = self.legs[3].joints
+
+        q = []
+
+        q.append(self.legs[0].computeLocalInverseKinematics(np.array([self.legs[0].x_local_goal, self.legs[0].y_local_goal+dy, self.legs[0].z_local_goal])))
+        q.append(self.legs[1].computeLocalInverseKinematics(np.array([self.legs[1].x_local_goal, self.legs[1].y_local_goal-dy, self.legs[1].z_local_goal])))
+        q.append(self.legs[2].computeLocalInverseKinematics(np.array([self.legs[2].x_local_goal, self.legs[2].y_local_goal-dy, self.legs[2].z_local_goal])))
+        q.append(self.legs[3].computeLocalInverseKinematics(np.array([self.legs[3].x_local_goal, self.legs[3].y_local_goal+dy, self.legs[3].z_local_goal])))
+
+        if np.array_equal(q1,q[0]) == False:
+            if np.array_equal(q2,q[1]) == False:
+                if np.array_equal(q3,q[2]) == False:
+                    if np.array_equal(q4,q[3]) == False:
+                        self.legs[0].y_local_goal = self.legs[0].y_local_goal+dy
+                        self.legs[1].y_local_goal =  self.legs[1].y_local_goal-dy
+                        self.legs[2].y_local_goal =  self.legs[2].y_local_goal-dy
+                        self.legs[3].y_local_goal =  self.legs[3].y_local_goal+dy
+                        self.y_local_goal = self.y_local_goal+dy
+
+        q = np.array(q)
+
+        self.sendJointCommand(q)
+
+
+
+    ##Added the setLegY function to the quadruped class
+    def setLegY(self, leg, y):
+
+        q1 = self.legs[0].computeLocalInverseKinematics(np.array([self.legs[0].x_local_goal, self.legs[0].y_local_goal, self.legs[0].z_local_goal]))
+        q2 = self.legs[1].computeLocalInverseKinematics(np.array([self.legs[1].x_local_goal, self.legs[1].y_local_goal, self.legs[1].z_local_goal]))
+        q3 = self.legs[2].computeLocalInverseKinematics(np.array([self.legs[2].x_local_goal, self.legs[2].y_local_goal, self.legs[2].z_local_goal]))
+        q4 = self.legs[3].computeLocalInverseKinematics(np.array([self.legs[3].x_local_goal, self.legs[3].y_local_goal, self.legs[3].z_local_goal]))
+
+        if leg == 1:
+            q1 = self.legs[0].computeLocalInverseKinematics(np.array([self.legs[0].x_local_goal, y, self.legs[0].z_local_goal]))
+            self.legs[0].y_local_goal = y
+        elif leg == 2:
+            q2 = self.legs[1].computeLocalInverseKinematics(np.array([self.legs[1].x_local_goal, -y, self.legs[1].z_local_goal]))
+            self.legs[1].y_local_goal = -y
+        elif leg == 3:
+            q3 = self.legs[2].computeLocalInverseKinematics(np.array([self.legs[2].x_local_goal, -y, self.legs[2].z_local_goal]))
+            self.legs[2].y_local_goal = -y
+        elif leg == 4:
+            q4 = self.legs[3].computeLocalInverseKinematics(np.array([self.legs[3].x_local_goal, y, self.legs[3].z_local_goal]))
+            self.legs[3].y_local_goal = y
+        joints = np.array([q1,q2,q3,q4])
+
+        self.sendJointCommand(joints)
+
+    def setLegYZ(self, leg, y,z):
+
+        q1 = self.legs[0].computeLocalInverseKinematics(np.array([self.legs[0].x_local_goal, self.legs[0].y_local_goal, self.legs[0].z_local_goal]))
+        q2 = self.legs[1].computeLocalInverseKinematics(np.array([self.legs[1].x_local_goal, self.legs[1].y_local_goal, self.legs[1].z_local_goal]))
+        q3 = self.legs[2].computeLocalInverseKinematics(np.array([self.legs[2].x_local_goal, self.legs[2].y_local_goal, self.legs[2].z_local_goal]))
+        q4 = self.legs[3].computeLocalInverseKinematics(np.array([self.legs[3].x_local_goal, self.legs[3].y_local_goal, self.legs[3].z_local_goal]))
+
+        if leg == 1:
+            q1 = self.legs[0].computeLocalInverseKinematics(np.array([self.legs[0].x_local_goal, y, z]))
+            self.legs[0].y_local_goal = y
+            self.legs[0].z_local_goal = z
+        elif leg == 2:
+            q2 = self.legs[1].computeLocalInverseKinematics(np.array([self.legs[1].x_local_goal, -y, z]))
+            self.legs[1].y_local_goal = -y
+            self.legs[1].z_local_goal = z
+        elif leg == 3:
+            q3 = self.legs[2].computeLocalInverseKinematics(np.array([self.legs[2].x_local_goal, -y, z]))
+            self.legs[2].y_local_goal = -y
+            self.legs[2].z_local_goal = z
+        elif leg == 4:
+            q4 = self.legs[3].computeLocalInverseKinematics(np.array([self.legs[3].x_local_goal, y, z]))
+            self.legs[3].y_local_goal = y
+            self.legs[3].z_local_goal = z
+        joints = np.array([q1,q2,q3,q4])
+
+        self.sendJointCommand(joints)
+
+
+    def update_positions_leg_from_robot(self):
+        #updating the independent leg positions.
+        current_pos,__ =self.leg_con.read_leg_status()
+        self.legs[0].setJointPositions(current_pos[0:3])##front right
+        self.legs[2].setJointPositions(current_pos[3:6])##fron left
+        self.legs[3].setJointPositions(current_pos[6:9])##back right
+        self.legs[1].setJointPositions(current_pos[9:12])##back left
+
+    def get_EE_positions(self):
+        self.update_positions_leg_from_robot()
+        leg=[]
+        for i in range(0,4):
+            leg.append(self.legs[0].getEEPosition())
+            leg.append(self.legs[1].getEEPosition())
+            leg.append(self.legs[2].getEEPosition())
+            leg.append(self.legs[3].getEEPosition())
+        return leg
 
     def joint_state_subscriber_callback(self, joint_state):
             joint_state_cp = copy.deepcopy(joint_state)
