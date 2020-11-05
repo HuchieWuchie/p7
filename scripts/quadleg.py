@@ -121,7 +121,7 @@ class QuadLeg:
 
         R = (x**2 + y**2 + z**2 - l1**2 - l2**2 - l3**2)/(2*l2*l3)
         if R > 1.0:
-            print("Not a feasible position")
+            #print("Not a feasible position")
             return self.joints - self.joint_initial
 
         joint = np.zeros(3)
