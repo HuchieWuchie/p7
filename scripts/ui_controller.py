@@ -48,6 +48,11 @@ def function(id):
     elif id == 13:
         quadruped.gait.setHeight(val)
 
+    elif id == 14:
+        print("Changing x")
+        for i in range(len(quadruped.legs)):
+            quadruped.setLegX(leg = i+1, x = val)
+
     """
     elif id == 3:
         joint_state = quadruped.setRoll(val)
@@ -79,7 +84,6 @@ quadruped = Quadruped(simulation=sim)
 
 
 
-
 root = tk.Tk()
 root.title("Quadruped GUI")
 
@@ -98,6 +102,7 @@ labels.append(tk.Label(root, text="Leg back right z: "))
 labels.append(tk.Label(root, text="Leg back left z: "))
 labels.append(tk.Label(root, text="Phase time: "))
 labels.append(tk.Label(root, text="Step height: "))
+labels.append(tk.Label(root, text="Set all leg x: "))
 labels.append(tk.Label(root, text="Activate gait: "))
 
 for i in range(len(labels)):
@@ -127,11 +132,12 @@ joint_sliders.append(tk.Scale((root), from_=-0.52, to=0.0, resolution=0.01, leng
 joint_sliders[-1].set(-0.25)
 joint_sliders.append(tk.Scale((root), from_=0.1, to=1.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(12)))
 joint_sliders.append(tk.Scale((root), from_=0.1, to=1, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(13)))
+joint_sliders.append(tk.Scale((root), from_=-0.2, to=0.2, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(14)))
 joint_sliders.append(tk.Button((root), text="Gait activate", command=changeGait))
 for i in range(len(joint_sliders)):
     joint_sliders[i].grid(row=i, column=2)
 
 exitButton = tk.Button(root, text="Exit Program", command=root.quit)
-exitButton.grid(row=15, column = 2)
+exitButton.grid(row=20, column = 2)
 
 root.mainloop()

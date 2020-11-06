@@ -62,8 +62,8 @@ class Quadruped:
         self.z_local_goal = self.COM[2]
 
 
-        self.gait = Gait(self.legs,frequency = 10)
-        self.commandFrequency = 30
+        self.gait = Gait(self.legs,frequency = 80)
+        self.commandFrequency = 10
         self.setTranslationalVelocity(0.0)
         self.setAngularVelocity(0.0)
         self.gaitStyle = 0
@@ -74,6 +74,10 @@ class Quadruped:
         if self.simulation == False:
             self.leg_con = leg_connection(name_serial_port='/dev/ttyACM0')
             self.time_frequency = time.time()
+            self.stateUpdateFrequency = 80 # hz
+            time.sleep(1)
+            self.stateReadThread = threading.Thread(target=self.updateState).start()
+
 
 
     def changeGait(self):
@@ -99,10 +103,10 @@ class Quadruped:
                 local_ee = self.legs[i].computeLocalForwardKinematics(jointArr[i])
                 if self.legs[i].side == "left":
                     COM[0] += -local_ee[0]
-                    COM[1] += -local_ee[1]
+                    COM[1] += -local_ee[1] - 0.02 # y COM offset
                 else:
                     COM[0] += local_ee[0]
-                    COM[1] += local_ee[1]
+                    COM[1] += local_ee[1] - 0.02
                 COM[2] += local_ee[2]
                 nr_contacts += 1
         COM = COM / nr_contacts
@@ -135,12 +139,13 @@ class Quadruped:
 
         self.yCOMdesired = 0.0
         y_local_goal = 0
-        stepSize = 0.1 # in meters
-        stanceVel = 0.0002 # arbitrary unit, depends on gait frequency
+        stepSize = 0.05 # in meters
+        stanceVel = 0.01/8 # arbitrary unit, depends on gait frequency
         while True:
             ts = int(round(time.time() * 1000))
 
             if self.readyToWalk == True:
+
                 """
                 if self.gaitStyle == 0:
                     moving, q0,q1,q2,q3 = self.gait.creep(self.transl_vel, self.ang_vel, self.legs, self.z_local_goal, self.y_local_goal)
@@ -163,7 +168,7 @@ class Quadruped:
                     y_local_goal = self.legs[3].y_local_goal
                 if self.gait.phase == 7 and self.gait.t == 0.0:
                     y_local_goal = -self.legs[1].y_local_goal
-                moving, q0,q1,q2,q3 = self.gait.stableCreep(0.15, self.legs, self.z_local_goal, y_local_goal)
+                moving, q0,q1,q2,q3 = self.gait.stableCreep(stepSize, self.legs, self.z_local_goal, y_local_goal)
                 joints = np.array([q0,q1,q2,q3])
                 self.sendJointCommand(joints)
 
@@ -541,26 +546,75 @@ class Quadruped:
 
         self.sendJointCommand(joints)
 
+    def setLegX(self, leg, x):
+
+        q1 = self.legs[0].computeLocalInverseKinematics(np.array([self.legs[0].x_local_goal, self.legs[0].y_local_goal, self.legs[0].z_local_goal]))
+        q2 = self.legs[1].computeLocalInverseKinematics(np.array([self.legs[1].x_local_goal, self.legs[1].y_local_goal, self.legs[1].z_local_goal]))
+        q3 = self.legs[2].computeLocalInverseKinematics(np.array([self.legs[2].x_local_goal, self.legs[2].y_local_goal, self.legs[2].z_local_goal]))
+        q4 = self.legs[3].computeLocalInverseKinematics(np.array([self.legs[3].x_local_goal, self.legs[3].y_local_goal, self.legs[3].z_local_goal]))
+
+        if leg == 1:
+            q1 = self.legs[0].computeLocalInverseKinematics(np.array([x, self.legs[0].y_local_goal, self.legs[0].z_local_goal]))
+
+        elif leg == 2:
+            q2 = self.legs[1].computeLocalInverseKinematics(np.array([x, self.legs[1].y_local_goal, self.legs[1].z_local_goal]))
+
+        elif leg == 3:
+            q3 = self.legs[2].computeLocalInverseKinematics(np.array([x, self.legs[2].y_local_goal, self.legs[2].z_local_goal]))
+
+        elif leg == 4:
+            q4 = self.legs[3].computeLocalInverseKinematics(np.array([x, self.legs[3].y_local_goal, self.legs[3].z_local_goal]))
+
+        joints = np.array([q1,q2,q3,q4])
+        print(joints)
+
+        if leg == 1:
+            self.legs[0].x_local_goal = x
+        elif leg == 2:
+            self.legs[1].x_local_goal = -x
+        elif leg == 3:
+            self.legs[2].x_local_goal = -x
+        elif leg == 4:
+            self.legs[3].x_local_goal = x
+
+        self.sendJointCommand(joints)
+
     def updateState(self):
 
-        self.update_positions_leg_from_robot()
+        t_period = 1 / self.stateUpdateFrequency
 
-        jointArr = []
-        swingArr = []
-        for i in range(len(self.legs)):
-            jointArr.append(self.legs[i].joints)
-            swingArr.append(self.legs[i].swing)
+        while True:
+            ts = int(round(time.time() * 1000))
 
-        jointArr = np.array(jointArr)
-        self.COM = self.getCOM(jointArr, swingArr)
+
+
+            #print("Før")
+            self.update_positions_leg_from_robot()
+            #print("Efter")
+            jointArr = []
+            swingArr = []
+            for i in range(len(self.legs)):
+                jointArr.append(self.legs[i].joints)
+                swingArr.append(self.legs[i].swing)
+
+            jointArr = np.array(jointArr)
+            #print(jointArr)
+            self.COM = self.getCOM(jointArr, swingArr)
+            #print("COM: ", self.COM)#, "\t swing: ", self.legs[0].swing, " ", self.legs[1].swing, " ", self.legs[2].swing, " ", self.legs[2].swing, " ")
+            #print("COM: ", self.COM, "\t leg x: ", self.legs[0].computeLocalForwardKinematics(self.legs[0].joints)[0], " ", self.legs[0].computeLocalForwardKinematics(self.legs[1].joints)[0], " ", self.legs[0].computeLocalForwardKinematics(self.legs[2].joints)[0], " ", self.legs[0].computeLocalForwardKinematics(self.legs[3].joints)[0], " ")
+
+            te = int(round(time.time() * 1000))
+            t_sleep = (t_period-((te-ts))*0.001)
+            if t_sleep > 0:
+                time.sleep((t_period-((te-ts))*0.001))
 
     def update_positions_leg_from_robot(self):
         #updating the independent leg positions.
-        current_pos,__ =self.leg_con.read_leg_status()
-        self.legs[0].setJointPositions(current_pos[0:3])##front right
-        self.legs[2].setJointPositions(current_pos[3:6])##fron left
-        self.legs[3].setJointPositions(current_pos[6:9])##back right
-        self.legs[1].setJointPositions(current_pos[9:12])##back left
+        current_pos,_= self.leg_con.get_status()
+        self.legs[0].setJointPositions(current_pos[0:3])##front right # correct
+        self.legs[2].setJointPositions(-current_pos[3:6])##fron left # correct
+        self.legs[3].setJointPositions(current_pos[6:9])##back right # correct
+        self.legs[1].setJointPositions(-current_pos[9:12])##back left
 
     def joint_state_subscriber_callback(self, joint_state):
             joint_state_cp = copy.deepcopy(joint_state)

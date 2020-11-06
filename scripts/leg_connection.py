@@ -1,6 +1,7 @@
 from teensy_serial import serial_teensy
 import numpy as np
-
+import threading
+import time
 
 class leg_connection:
     def __init__(self,name_serial_port='/dev/tty.usbmodem58778701',use_velocity=False):
@@ -17,7 +18,7 @@ class leg_connection:
         self.negative_threshold=4092
 
         self.number_of_motors=12
-
+        self.moveThread = threading.Thread(target=self.read).start()
     def set_offset(self, offset_raw_value):
         self.offset_raw = offset_raw_value
         self.offset_radians = self.serial.convert_rawvalue_2_radians(offset_raw_value)
@@ -34,7 +35,7 @@ class leg_connection:
     def execute_joint_position_radians(self,array_of_joint_positions):
         joint_pos_raw=self.serial.convert_radians_2_rawvalue(array_of_joint_positions)
         joint_pos_execute_raw=joint_pos_raw+self.offset_raw
-        print(joint_pos_execute_raw)
+        #print(joint_pos_execute_raw)
         self.serial.send_positions_array_ints(np.asarray(joint_pos_execute_raw,dtype=np.int64))
     ######## Update this function to check whether it is within the limits or not.
 
@@ -79,6 +80,14 @@ class leg_connection:
                 array[i]=(self.negative_threshold*2-array[i])
         return array
 
+    def read(self):
+        while True:
+            self.pos_rad, self.foot = self.read_leg_status()
+            #print(self.pos_rad)
+            time.sleep(0.001)
+
+    def get_status(self):
+        return self.pos_rad,self.foot
 
 
     ####### Previosly used function. Still working, but not supported B-)

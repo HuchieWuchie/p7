@@ -6,6 +6,8 @@ class serial_teensy:
         #Note that teensy always works at this baudrate.
         self.num_ints = number_of_motors
         self.read_velocites=use_velocity
+        self.available=True
+
 
     def convert_rawvalue_2_degree(self,rawvalue):
         return np.asarray(rawvalue)*0.088
@@ -35,10 +37,12 @@ class serial_teensy:
         if self.read_velocites:
             readings=self.ser.read((self.num_ints*2)*4+4)
         else:
-            readings=self.ser.read((self.num_ints)*4+4)
+            readings=self.ser.readline()
         #Checking if it is not an "empty" reading from teensy
+        stri=readings.decode('ascii')
         if str(readings) != "b\'\'":
-            return True,readings.decode('ascii')
+            stri=stri[:-2]
+            return True,stri
         else:
             return False,False
 
@@ -51,8 +55,12 @@ class serial_teensy:
         #binary_array=''.join(chr(b) for b in output)
         #print(binary_array)
         #print(output)
-        self.ser.write(str(output).encode('utf-8'))
-        self.ser.flush()
+        if self.available:
+            self.available=False
+            self.ser.write(str(output).encode('utf-8'))
+            self.ser.flush()
+            self.available=True
+
 
     def convert_string_to_ints(self,string_of_numbers):
         length=len(string_of_numbers)
@@ -140,7 +148,7 @@ class serial_teensy:
 
     #Reads the current positions and returns an array of ints corresponding to the number of motors
     def read_status(self):
-        self.issue_reading_command()
+        #self.issue_reading_command()
         new_value=False
         value=0
         while (not new_value):

@@ -169,7 +169,7 @@ class Gait:
         """
 
         self.stepSize = stepSize
-        self.t_res = 0.2 / self.frequency
+        self.t_res = 0.3 / self.frequency
         if self.phase == 3 or self.phase == 4 or self.phase == 6 or self.phase == 7:
             self.t = self.t + self.t_res
         if self.t > 1.0:
