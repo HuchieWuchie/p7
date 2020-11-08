@@ -4,7 +4,7 @@
 //setup for the foot sensors
 #define number_of_feet_sensors 4
 //array containing info of the sensors
-int feet_touching[number_of_feet_sensors]={0,0,0,0};//,0};
+int feet_touching[number_of_feet_sensors]={0,0,1,1};//,0};
 //assign accordingly
 int feet_input_pins[number_of_feet_sensors]={23,22,21,20};//,0};
 
@@ -104,6 +104,8 @@ void setup() {
     }
   }
   set_position_gain(1000);
+  set_derivative_gain(0);
+  set_integral_gain(0);
   
   //Serial port setup. This baudrate does not matter, teensy always uses 
   //120000
@@ -112,7 +114,7 @@ void setup() {
 }
 
 //This have an impact on trajectories
-int16_t margin_allowed[number_of_motors]={10,40,40,10,40,40,10,40,40,10,40,40};
+int16_t margin_allowed[number_of_motors]={30,40,40,30,40,40,30,40,40,30,40,40};
 
 
 bool newdata=false;
@@ -124,9 +126,6 @@ int32_t array_positions[number_of_motors];
 int32_t current_positions[number_of_motors];
 //array used to store reference/target positions
 int32_t reference_positions[number_of_motors];
-//should possibly be an array
-bool ready_=true;
-
 
 
 
@@ -139,19 +138,15 @@ void loop() {
   //delay(2000);
   //Serial.println(dxl.getPort());
   //function to update all the foor sensors
-  update_feet_sensors(feet_touching,feet_input_pins);
+  //update_feet_sensors(feet_touching,feet_input_pins);
   
   read_from_all_motors(current_positions);
-  //for(int i=0;i<number_of_motors;i++){
-  //  Serial.print("Motor number ");
-  //  Serial.print(i);
-  //  Serial.print("   ");Serial.println(current_positions[i]);
-  //}
-  
 
+
+  send_all_positions(current_positions,feet_touching);
   //check if there is update from the serial port;
   bool inputs=input_from_serial(array_positions);
-  if(inputs){
+  if(inputs){    
     //maybe add this directly inside the function
     append_motor_executes(array_positions,motors_targets);
     //Serial.print(motors_targets[0][0]);
@@ -163,7 +158,7 @@ void loop() {
   //Execute commands from the buffer and removes, 
   //if it has been executed.
   execute_current_target(motors_targets,current_positions,
-                         reference_positions,ready_);
+                         reference_positions);
   
   //set this delay lower...
   delay(1);
