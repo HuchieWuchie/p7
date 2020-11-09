@@ -49,7 +49,6 @@ def function(id):
         quadruped.gait.setHeight(val)
 
     elif id == 14:
-        print("Changing x")
         for i in range(len(quadruped.legs)):
             quadruped.setLegX(leg = i+1, x = val)
 

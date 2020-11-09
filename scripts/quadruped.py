@@ -61,9 +61,9 @@ class Quadruped:
         self.y_local_goal = self.COM[1]
         self.z_local_goal = self.COM[2]
 
+        self.commandFrequency = 40
+        self.gait = Gait(self.legs,frequency = self.commandFrequency)
 
-        self.gait = Gait(self.legs,frequency = 80)
-        self.commandFrequency = 10
         self.setTranslationalVelocity(0.0)
         self.setAngularVelocity(0.0)
         self.gaitStyle = 0
@@ -72,9 +72,10 @@ class Quadruped:
         self.moveThread = threading.Thread(target=self.move).start()
 
         if self.simulation == False:
+            #self.leg_con = leg_connection(name_serial_port='/dev/ttyACM0',using_current=True)
             self.leg_con = leg_connection(name_serial_port='/dev/ttyACM0')
             self.time_frequency = time.time()
-            self.stateUpdateFrequency = 80 # hz
+            self.stateUpdateFrequency = 40 # hz
             time.sleep(1)
             self.stateReadThread = threading.Thread(target=self.updateState).start()
 
@@ -102,11 +103,11 @@ class Quadruped:
             if swingArr[i] == False:
                 local_ee = self.legs[i].computeLocalForwardKinematics(jointArr[i])
                 if self.legs[i].side == "left":
-                    COM[0] += -local_ee[0]
-                    COM[1] += -local_ee[1] - 0.02 # y COM offset
+                    COM[0] += local_ee[0]
+                    COM[1] += -local_ee[1] #- 0.02 # y COM offset
                 else:
                     COM[0] += local_ee[0]
-                    COM[1] += local_ee[1] - 0.02
+                    COM[1] += local_ee[1] #- 0.02
                 COM[2] += local_ee[2]
                 nr_contacts += 1
         COM = COM / nr_contacts
@@ -138,13 +139,19 @@ class Quadruped:
         t_period = 1 / self.gait.frequency
 
         self.yCOMdesired = 0.0
+        self.xCOMdesired = 0.0
         y_local_goal = 0
         stepSize = 0.05 # in meters
-        stanceVel = 0.01/8 # arbitrary unit, depends on gait frequency
+        stanceVel = 0.001/8 # arbitrary unit, depends on gait frequency
+        #stanceVel = 0.01/8 # arbitrary unit, depends on gait frequency
+        zLegVel = 0.0001
+        #zLegVel = 0.0005
+        zLegMargin = 0.003
         while True:
             ts = int(round(time.time() * 1000))
 
             if self.readyToWalk == True:
+                #print(self.gait.phase)
 
                 """
                 if self.gaitStyle == 0:
@@ -159,60 +166,243 @@ class Quadruped:
 
                 elif self.gaitStyle == 2:
                     """
-                if self.gait.phase == 3 and self.gait.t == 0.0:
-                    y_local_goal = -self.legs[2].y_local_goal
                 if self.gait.phase == 4 and self.gait.t == 0.0:
-                    y_local_goal = self.legs[0].y_local_goal
+                    y_local_goal = -self.legs[2].y_local_goal # used to be [2]
+                if self.gait.phase == 8 and self.gait.t == 0.0:
+                    y_local_goal = self.legs[3].y_local_goal # used to be [0]
 
-                if self.gait.phase == 6 and self.gait.t == 0.0:
-                    y_local_goal = self.legs[3].y_local_goal
-                if self.gait.phase == 7 and self.gait.t == 0.0:
-                    y_local_goal = -self.legs[1].y_local_goal
+                if self.gait.phase == 12 and self.gait.t == 0.0:
+                    y_local_goal = self.legs[0].y_local_goal # used to be [3]
+                if self.gait.phase == 16 and self.gait.t == 0.0:
+                    y_local_goal = -self.legs[1].y_local_goal # used to [1]
                 moving, q0,q1,q2,q3 = self.gait.stableCreep(stepSize, self.legs, self.z_local_goal, y_local_goal)
+                #print(self.z_local_goal)
                 joints = np.array([q0,q1,q2,q3])
                 self.sendJointCommand(joints)
 
                 if self.gait.phase == 1:
                     self.yCOMdesired = 0.0
+                    self.xCOMdesired = 0.0
                     if self.COM[1] < self.yCOMdesired + .01 and self.COM[1] > self.yCOMdesired - .01:
+                        #if self.COM[0] < self.xCOMdesired + .01 and self.COM[0] > self.xCOMdesired - .01:
                         self.gait.phase += 1
                     elif self.yCOMdesired > self.COM[1]:
                         self.setYIncrement(stanceVel)
                     elif self.yCOMdesired < self.COM[1]:
                         self.setYIncrement(-stanceVel)
+
+                    #if self.xCOMdesired > self.COM[0]:
+                    #    self.setXIncrement(stanceVel)
+                    #elif self.xCOMdesired < self.COM[0]:
+                    #    self.setXIncrement(-stanceVel)
 
 
 
                 elif self.gait.phase == 2:
                     # move COM towards y -0.13
-                    self.yCOMdesired = -0.08
+                    self.yCOMdesired = 0.075
+                    self.xCOMdesired = -0.0
                     if self.COM[1] < self.yCOMdesired + .01 and self.COM[1] > self.yCOMdesired - .01:
+                        #if self.COM[0] < self.xCOMdesired + .01 and self.COM[0] > self.xCOMdesired - .01:
                         self.gait.phase += 1
                     elif self.yCOMdesired > self.COM[1]:
                         self.setYIncrement(stanceVel)
                     elif self.yCOMdesired < self.COM[1]:
                         self.setYIncrement(-stanceVel)
+
+                    #if self.xCOMdesired > self.COM[0]:
+                    #    self.setXIncrement(stanceVel)
+                    #elif self.xCOMdesired < self.COM[0]:
+                    #    self.setXIncrement(-stanceVel)
+
+                elif self.gait.phase == 3:
+                    # lower right back
+                    zDiff = -0.04
+                    zLegDesired = self.z_local_goal - zDiff
+
+                    z_current = self.legs[3].computeLocalForwardKinematics(self.legs[3].joints)[2]
+                    if z_current >zLegDesired - zLegMargin and z_current < zLegDesired + zLegMargin:
+                        self.gait.phase += 1
+
+                    elif zLegDesired > z_current:
+                        self.deltaZLeg(4, zLegVel)
+                    elif zLegDesired < z_current:
+                        self.deltaZLeg(4, -zLegVel)
 
                 elif self.gait.phase == 5:
+                    # extend lower back
+                    zDiff = 0.04
+                    zLegDesired = self.z_local_goal
+
+                    z_current = self.legs[3].computeLocalForwardKinematics(self.legs[3].joints)[2]
+                    if z_current >zLegDesired - zLegMargin and z_current < zLegDesired + zLegMargin:
+                        self.gait.phase += 1
+
+                    elif zLegDesired > z_current:
+                        self.deltaZLeg(4, zLegVel)
+                    elif zLegDesired < z_current:
+                        self.deltaZLeg(4, -zLegVel)
+
+                elif self.gait.phase == 6:
+                    # move COM towards y -0.13
+                    """
+                    self.yCOMdesired = 0.075
+                    self.xCOMdesired = 0.0
+                    if self.COM[1] < self.yCOMdesired + .01 and self.COM[1] > self.yCOMdesired - .01:
+                        if self.COM[0] < self.xCOMdesired + .01 and self.COM[0] > self.xCOMdesired - .01:
+                            self.gait.phase += 1
+                    elif self.yCOMdesired > self.COM[1]:
+                        self.setYIncrement(stanceVel)
+                    elif self.yCOMdesired < self.COM[1]:
+                        self.setYIncrement(-stanceVel)
+
+                    if self.xCOMdesired > self.COM[0]:
+                        self.setXIncrement(stanceVel)
+                    elif self.xCOMdesired < self.COM[0]:
+                        self.setXIncrement(-stanceVel)
+                    """
+                    self.gait.phase += 1
+
+                elif self.gait.phase == 7:
+                    # lower left front
+                    zDiff = -0.04
+                    zLegDesired = self.z_local_goal - zDiff
+
+                    z_current = self.legs[2].computeLocalForwardKinematics(self.legs[2].joints)[2]
+                    if z_current >zLegDesired - zLegMargin and z_current < zLegDesired + zLegMargin:
+                        self.gait.phase += 1
+
+                    elif zLegDesired > z_current:
+                        self.deltaZLeg(3, zLegVel)
+                    elif zLegDesired < z_current:
+                        self.deltaZLeg(3, -zLegVel)
+
+                elif self.gait.phase == 9:
+                    # extend left front
+                    zDiff = 0.04
+                    zLegDesired = self.z_local_goal
+
+                    z_current = self.legs[2].computeLocalForwardKinematics(self.legs[2].joints)[2]
+                    if z_current >zLegDesired - zLegMargin and z_current < zLegDesired + zLegMargin:
+                        self.gait.phase += 1
+
+                    elif zLegDesired > z_current:
+                        self.deltaZLeg(3, zLegVel)
+                    elif zLegDesired < z_current:
+                        self.deltaZLeg(3, -zLegVel)
+
+
+                elif self.gait.phase == 10:
                     # move COM towards y 0.13
-                    self.yCOMdesired = 0.08
-                    if self.COM[1] < self.yCOMdesired + .01 and self.COM[1] > self.yCOMdesired - .01:
+                    self.yCOMdesired = 0.075 #+ stepSize
+                    #self.xCOMdesired = 0.0
+                    if self.COM[1] < self.yCOMdesired + .002 and self.COM[1] > self.yCOMdesired - .002:
+                        #if self.COM[0] < self.xCOMdesired + .01 and self.COM[0] > self.xCOMdesired - .01:
                         self.gait.phase += 1
                     elif self.yCOMdesired > self.COM[1]:
                         self.setYIncrement(stanceVel)
                     elif self.yCOMdesired < self.COM[1]:
                         self.setYIncrement(-stanceVel)
 
+                    #if self.xCOMdesired > self.COM[0]:
+                    #    self.setXIncrement(stanceVel)
+                    #elif self.xCOMdesired < self.COM[0]:
+                    #    self.setXIncrement(-stanceVel)
 
-                elif self.gait.phase == 8:
-                    # move COM towards y 0.0
+                elif self.gait.phase == 11:
+                    # lower back left
+                    zDiff = -0.04
+                    zLegDesired = self.z_local_goal - zDiff
+
+                    z_current = self.legs[1].computeLocalForwardKinematics(self.legs[1].joints)[2]
+                    if z_current >zLegDesired - zLegMargin and z_current < zLegDesired + zLegMargin:
+                        self.gait.phase += 1
+
+                    elif zLegDesired > z_current:
+                        self.deltaZLeg(2, zLegVel)
+                    elif zLegDesired < z_current:
+                        self.deltaZLeg(2, -zLegVel)
+
+
+
+                elif self.gait.phase == 13:
+                    # extend back left
+                    zDiff = 0.04
+                    zLegDesired = self.z_local_goal
+
+                    z_current = self.legs[1].computeLocalForwardKinematics(self.legs[1].joints)[2]
+                    if z_current >zLegDesired - zLegMargin and z_current < zLegDesired + zLegMargin:
+                        self.gait.phase += 1
+
+                    elif zLegDesired > z_current:
+                        self.deltaZLeg(2, zLegVel)
+                    elif zLegDesired < z_current:
+                        self.deltaZLeg(2, -zLegVel)
+
+
+                elif self.gait.phase == 14:
+                    """
+                    self.yCOMdesired = 0.075
+                    self.xCOMdesired = 0.0
+                    if self.COM[1] < self.yCOMdesired + .01 and self.COM[1] > self.yCOMdesired - .01:
+                        if self.COM[0] < self.xCOMdesired + .01 and self.COM[0] > self.xCOMdesired - .01:
+                            self.gait.phase += 1
+                    elif self.yCOMdesired > self.COM[1]:
+                        self.setYIncrement(stanceVel)
+                    elif self.yCOMdesired < self.COM[1]:
+                        self.setYIncrement(-stanceVel)
+
+                    if self.xCOMdesired > self.COM[0]:
+                        self.setXIncrement(stanceVel)
+                    elif self.xCOMdesired < self.COM[0]:
+                        self.setXIncrement(-stanceVel)
+                    """
+                    self.gait.phase += 1
+
+                elif self.gait.phase == 15:
+                    # lower front right
+                    zDiff = -0.05
+                    zLegDesired = self.z_local_goal - zDiff
+
+                    z_current = self.legs[0].computeLocalForwardKinematics(self.legs[0].joints)[2]
+                    if z_current >zLegDesired - zLegMargin and z_current < zLegDesired + zLegMargin:
+                        self.gait.phase += 1
+
+                    elif zLegDesired > z_current:
+                        self.deltaZLeg(1, zLegVel)
+                    elif zLegDesired < z_current:
+                        self.deltaZLeg(1, -zLegVel)
+
+                elif self.gait.phase == 17:
+                    # extend front right
+                    zDiff = 0.04
+                    zLegDesired = self.z_local_goal
+
+                    z_current = self.legs[0].computeLocalForwardKinematics(self.legs[0].joints)[2]
+                    if z_current >zLegDesired - zLegMargin and z_current < zLegDesired + zLegMargin:
+                        self.gait.phase += 1
+
+                    elif zLegDesired > z_current:
+                        self.deltaZLeg(1, zLegVel)
+                    elif zLegDesired < z_current:
+                        self.deltaZLeg(1, -zLegVel)
+
+                elif self.gait.phase == 18:
+                    # move COM towards y -0.13
                     self.yCOMdesired = 0.0
+                    #self.xCOMdesired = 0.0
                     if self.COM[1] < self.yCOMdesired + .01 and self.COM[1] > self.yCOMdesired - .01:
+                        #if self.COM[0] < self.xCOMdesired + .01 and self.COM[0] > self.xCOMdesired - .01:
                         self.gait.phase += 1
                     elif self.yCOMdesired > self.COM[1]:
                         self.setYIncrement(stanceVel)
                     elif self.yCOMdesired < self.COM[1]:
                         self.setYIncrement(-stanceVel)
+
+                    #if self.xCOMdesired > self.COM[0]:
+                    #    self.setXIncrement(stanceVel)
+                    #elif self.xCOMdesired < self.COM[0]:
+                    #    self.setXIncrement(-stanceVel)
 
             te = int(round(time.time() * 1000))
             t_sleep = (t_period-((te-ts))*0.001)
@@ -350,19 +540,19 @@ class Quadruped:
 
         q = []
 
-        q.append(self.legs[0].computeLocalInverseKinematics(np.array([self.legs[0].x_local_goal + x, self.legs[0].y_local_goal, self.legs[0].z_local_goal])))
-        q.append(self.legs[1].computeLocalInverseKinematics(np.array([self.legs[1].x_local_goal -x, self.legs[1].y_local_goal, self.legs[1].z_local_goal])))
-        q.append(self.legs[2].computeLocalInverseKinematics(np.array([self.legs[2].x_local_goal -x, self.legs[2].y_local_goal, self.legs[2].z_local_goal])))
-        q.append(self.legs[3].computeLocalInverseKinematics(np.array([self.legs[3].x_local_goal + x, self.legs[3].y_local_goal, self.legs[3].z_local_goal])))
+        q.append(self.legs[0].computeLocalInverseKinematics(np.array([x, self.legs[0].y_local_goal, self.legs[0].z_local_goal])))
+        q.append(self.legs[1].computeLocalInverseKinematics(np.array([x, self.legs[1].y_local_goal, self.legs[1].z_local_goal])))
+        q.append(self.legs[2].computeLocalInverseKinematics(np.array([x, self.legs[2].y_local_goal, self.legs[2].z_local_goal])))
+        q.append(self.legs[3].computeLocalInverseKinematics(np.array([x, self.legs[3].y_local_goal, self.legs[3].z_local_goal])))
 
         if np.array_equal(q1,q[0]) == False:
             if np.array_equal(q2,q[1]) == False:
                 if np.array_equal(q3,q[2]) == False:
                     if np.array_equal(q4,q[3]) == False:
-                        self.legs[0].x_local_goal += x
-                        self.legs[1].x_local_goal += - x
-                        self.legs[2].x_local_goal += - x
-                        self.legs[3].x_local_goal += x
+                        self.legs[0].x_local_goal = x
+                        self.legs[1].x_local_goal = x
+                        self.legs[2].x_local_goal = x
+                        self.legs[3].x_local_goal = x
 
         q = np.array(q)
         self.sendJointCommand(q)
@@ -391,6 +581,31 @@ class Quadruped:
                         self.legs[3].y_local_goal =  y
                         self.y_local_goal = y
 
+        q = np.array(q)
+        self.sendJointCommand(q)
+
+    def setXIncrement(self, delta):
+
+        q1 = self.legs[0].joints
+        q2 = self.legs[1].joints
+        q3 = self.legs[2].joints
+        q4 = self.legs[3].joints
+
+        q = []
+        q.append(self.legs[0].computeLocalInverseKinematics(np.array([self.legs[0].x_local_goal, self.legs[0].y_local_goal, self.legs[0].z_local_goal])))
+        q.append(self.legs[1].computeLocalInverseKinematics(np.array([self.legs[1].x_local_goal, self.legs[1].y_local_goal, self.legs[1].z_local_goal])))
+        q.append(self.legs[2].computeLocalInverseKinematics(np.array([self.legs[2].x_local_goal, self.legs[2].y_local_goal, self.legs[2].z_local_goal])))
+        q.append(self.legs[3].computeLocalInverseKinematics(np.array([self.legs[3].x_local_goal, self.legs[3].y_local_goal, self.legs[3].z_local_goal])))
+
+        if np.array_equal(q1,q[0]) == False:
+            if np.array_equal(q2,q[1]) == False:
+                if np.array_equal(q3,q[2]) == False:
+                    if np.array_equal(q4,q[3]) == False:
+                        self.legs[0].x_local_goal +=  delta
+                        self.legs[1].x_local_goal +=  delta
+                        self.legs[2].x_local_goal +=  delta
+                        self.legs[3].x_local_goal +=  delta
+                        self.x_local_goal += delta
         q = np.array(q)
         self.sendJointCommand(q)
 
@@ -513,6 +728,38 @@ class Quadruped:
 
         return jointState
 
+    def deltaZLeg(self, leg, delta):
+
+        q1 = self.legs[0].computeLocalInverseKinematics(np.array([self.legs[0].x_local_goal, self.legs[0].y_local_goal, self.legs[0].z_local_goal]))
+        q2 = self.legs[1].computeLocalInverseKinematics(np.array([self.legs[1].x_local_goal, self.legs[1].y_local_goal, self.legs[1].z_local_goal]))
+        q3 = self.legs[2].computeLocalInverseKinematics(np.array([self.legs[2].x_local_goal, self.legs[2].y_local_goal, self.legs[2].z_local_goal]))
+        q4 = self.legs[3].computeLocalInverseKinematics(np.array([self.legs[3].x_local_goal, self.legs[3].y_local_goal, self.legs[3].z_local_goal]))
+
+        if leg == 1:
+            q1 = self.legs[0].computeLocalInverseKinematics(np.array([self.legs[0].x_local_goal, self.legs[0].y_local_goal, self.legs[0].z_local_goal+delta]))
+
+        elif leg == 2:
+            q2 = self.legs[1].computeLocalInverseKinematics(np.array([self.legs[1].x_local_goal, self.legs[1].y_local_goal, self.legs[1].z_local_goal+delta]))
+
+        elif leg == 3:
+            q3 = self.legs[2].computeLocalInverseKinematics(np.array([self.legs[2].x_local_goal, self.legs[2].y_local_goal, self.legs[2].z_local_goal+delta]))
+
+        elif leg == 4:
+            q4 = self.legs[3].computeLocalInverseKinematics(np.array([self.legs[3].x_local_goal, self.legs[3].y_local_goal, self.legs[3].z_local_goal+delta]))
+
+        joints = np.array([q1,q2,q3,q4])
+
+        if leg == 1:
+            self.legs[0].z_local_goal += delta
+        elif leg == 2:
+            self.legs[1].z_local_goal += delta
+        elif leg == 3:
+            self.legs[2].z_local_goal += delta
+        elif leg == 4:
+            self.legs[3].z_local_goal += delta
+
+        self.sendJointCommand(joints)
+
     def setLegZ(self, leg, z):
 
         q1 = self.legs[0].computeLocalInverseKinematics(np.array([self.legs[0].x_local_goal, self.legs[0].y_local_goal, self.legs[0].z_local_goal]))
@@ -566,7 +813,7 @@ class Quadruped:
             q4 = self.legs[3].computeLocalInverseKinematics(np.array([x, self.legs[3].y_local_goal, self.legs[3].z_local_goal]))
 
         joints = np.array([q1,q2,q3,q4])
-        print(joints)
+        #print(joints)
 
         if leg == 1:
             self.legs[0].x_local_goal = x
@@ -602,7 +849,7 @@ class Quadruped:
             self.COM = self.getCOM(jointArr, swingArr)
             #print("COM: ", self.COM)#, "\t swing: ", self.legs[0].swing, " ", self.legs[1].swing, " ", self.legs[2].swing, " ", self.legs[2].swing, " ")
             #print("COM: ", self.COM, "\t leg x: ", self.legs[0].computeLocalForwardKinematics(self.legs[0].joints)[0], " ", self.legs[0].computeLocalForwardKinematics(self.legs[1].joints)[0], " ", self.legs[0].computeLocalForwardKinematics(self.legs[2].joints)[0], " ", self.legs[0].computeLocalForwardKinematics(self.legs[3].joints)[0], " ")
-
+            print("COM: ", self.COM)
             te = int(round(time.time() * 1000))
             t_sleep = (t_period-((te-ts))*0.001)
             if t_sleep > 0:
@@ -610,6 +857,7 @@ class Quadruped:
 
     def update_positions_leg_from_robot(self):
         #updating the independent leg positions.
+        #current_pos,present_current,_= self.leg_con.get_status()
         current_pos,_= self.leg_con.get_status()
         self.legs[0].setJointPositions(current_pos[0:3])##front right # correct
         self.legs[2].setJointPositions(-current_pos[3:6])##fron left # correct

@@ -11,7 +11,7 @@ class Gait:
         self.t = 0 # paramaterization of gait phase from 0 to 1
         self.frequency = frequency
 
-        self.setHeight(0.2) # currently not used
+        self.setHeight(0.1) # currently not used
         self.setStepSize(0.00) # currently not used
         self.setPhaseTime(0.2)
         self.phase = 1
@@ -167,11 +167,24 @@ class Gait:
         """ input translational velocity and angular velocity in m/s and rad/s
             output end effector positions for each leg that satisfies that
         """
-
+        y_margin = stepSize * 0.1
+        z_margin = 0.01
         self.stepSize = stepSize
-        self.t_res = 0.3 / self.frequency
-        if self.phase == 3 or self.phase == 4 or self.phase == 6 or self.phase == 7:
+        #self.t_res = 0.3 / self.frequency
+        self.t_res = 0.1 / self.frequency
+        #self.current_z
+        if self.phase == 4 or self.phase == 8 or self.phase == 12 or self.phase == 16:
+            if self.t == 0:
+                if self.phase == 4:
+                    self.current_z = legs[2].z_local_goal
+                elif self.phase == 8:
+                    self.current_z = legs[3].z_local_goal
+                elif self.phase == 12:
+                    self.current_z = legs[0].z_local_goal
+                elif self.phase == 16:
+                    self.current_z = legs[1].z_local_goal
             self.t = self.t + self.t_res
+
         if self.t > 1.0:
             self.t = 1.0
 
@@ -182,7 +195,7 @@ class Gait:
             legAng.append(legs[i].computeLocalInverseKinematics(np.array([legs[i].x_local_goal, legs[i].y_local_goal, legs[i].z_local_goal])))
 
         # close the phase loop
-        if self.phase > 8:
+        if self.phase > 18:
             self.phase = 1
 
         if self.phase == 1:
@@ -208,6 +221,17 @@ class Gait:
             legs[3].swing = False
 
         elif self.phase == 3:
+            # relocate COM to 0.0
+            self.leg_swing['front_left'] = False
+            self.leg_swing['back_left'] = False
+            self.leg_swing['front_right'] = False
+            self.leg_swing['back_right'] = False
+            legs[0].swing = False
+            legs[1].swing = False
+            legs[2].swing = False
+            legs[3].swing = False
+
+        elif self.phase == 4:
             self.leg_swing['front_left'] = True
             self.leg_swing['back_left'] = False
             self.leg_swing['front_right'] = False
@@ -217,30 +241,8 @@ class Gait:
             legs[2].swing = True
             legs[3].swing = False
 
-            if self.t == 1.0:
-                self.t = 0.0
-                self.phase += 1
-                self.leg_swing['front_left'] = False
-                legs[2].swing = False
-
-        elif self.phase == 4:
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = True
-            self.leg_swing['back_right'] = False
-            legs[0].swing = True
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-            if self.t == 1.0:
-                self.t = 0.0
-                self.phase += 1
-                self.leg_swing['front_right'] = False
-                legs[0].swing = False
-
         elif self.phase == 5:
-            # relocate COM to 0.13
+            # relocate COM to 0.0
             self.leg_swing['front_left'] = False
             self.leg_swing['back_left'] = False
             self.leg_swing['front_right'] = False
@@ -251,6 +253,28 @@ class Gait:
             legs[3].swing = False
 
         elif self.phase == 6:
+            # relocate COM to -0.13
+            self.leg_swing['front_left'] = False
+            self.leg_swing['back_left'] = False
+            self.leg_swing['front_right'] = False
+            self.leg_swing['back_right'] = False
+            legs[0].swing = False
+            legs[1].swing = False
+            legs[2].swing = False
+            legs[3].swing = False
+
+        elif self.phase == 7:
+            # relocate COM to 0.0
+            self.leg_swing['front_left'] = False
+            self.leg_swing['back_left'] = False
+            self.leg_swing['front_right'] = False
+            self.leg_swing['back_right'] = False
+            legs[0].swing = False
+            legs[1].swing = False
+            legs[2].swing = False
+            legs[3].swing = False
+
+        elif self.phase == 8:
             self.leg_swing['front_left'] = False
             self.leg_swing['back_left'] = False
             self.leg_swing['front_right'] = False
@@ -260,13 +284,83 @@ class Gait:
             legs[2].swing = False
             legs[3].swing = True
 
-            if self.t == 1.0:
-                self.t = 0.0
-                self.phase += 1
-                self.leg_swing['back_right'] = False
-                legs[3].swing = False
+        elif self.phase == 9:
+            # relocate COM to 0.0
+            self.leg_swing['front_left'] = False
+            self.leg_swing['back_left'] = False
+            self.leg_swing['front_right'] = False
+            self.leg_swing['back_right'] = False
+            legs[0].swing = False
+            legs[1].swing = False
+            legs[2].swing = False
+            legs[3].swing = False
 
-        elif self.phase == 7:
+        elif self.phase == 10:
+            # relocate COM to 0.13
+            self.leg_swing['front_left'] = False
+            self.leg_swing['back_left'] = False
+            self.leg_swing['front_right'] = False
+            self.leg_swing['back_right'] = False
+            legs[0].swing = False
+            legs[1].swing = False
+            legs[2].swing = False
+            legs[3].swing = False
+
+        elif self.phase == 11:
+            # relocate COM to 0.0
+            self.leg_swing['front_left'] = False
+            self.leg_swing['back_left'] = False
+            self.leg_swing['front_right'] = False
+            self.leg_swing['back_right'] = False
+            legs[0].swing = False
+            legs[1].swing = False
+            legs[2].swing = False
+            legs[3].swing = False
+
+        elif self.phase == 12:
+            self.leg_swing['front_left'] = False
+            self.leg_swing['back_left'] = False
+            self.leg_swing['front_right'] = True
+            self.leg_swing['back_right'] = False
+            legs[0].swing = True
+            legs[1].swing = False
+            legs[2].swing = False
+            legs[3].swing = False
+
+        elif self.phase == 13:
+            # relocate COM to 0.0
+            self.leg_swing['front_left'] = False
+            self.leg_swing['back_left'] = False
+            self.leg_swing['front_right'] = False
+            self.leg_swing['back_right'] = False
+            legs[0].swing = False
+            legs[1].swing = False
+            legs[2].swing = False
+            legs[3].swing = False
+
+        elif self.phase == 14:
+            # relocate COM to -0.13
+            self.leg_swing['front_left'] = False
+            self.leg_swing['back_left'] = False
+            self.leg_swing['front_right'] = False
+            self.leg_swing['back_right'] = False
+            legs[0].swing = False
+            legs[1].swing = False
+            legs[2].swing = False
+            legs[3].swing = False
+
+        elif self.phase == 15:
+            # relocate COM to 0.0
+            self.leg_swing['front_left'] = False
+            self.leg_swing['back_left'] = False
+            self.leg_swing['front_right'] = False
+            self.leg_swing['back_right'] = False
+            legs[0].swing = False
+            legs[1].swing = False
+            legs[2].swing = False
+            legs[3].swing = False
+
+        elif self.phase == 16:
             self.leg_swing['front_left'] = False
             self.leg_swing['back_left'] = True
             self.leg_swing['front_right'] = False
@@ -276,13 +370,18 @@ class Gait:
             legs[2].swing = False
             legs[3].swing = False
 
-            if self.t == 1.0:
-                self.t = 0.0
-                self.phase += 1
-                self.leg_swing['back_left'] = False
-                legs[1].swing = False
+        elif self.phase == 17:
+            # relocate COM to 0.0
+            self.leg_swing['front_left'] = False
+            self.leg_swing['back_left'] = False
+            self.leg_swing['front_right'] = False
+            self.leg_swing['back_right'] = False
+            legs[0].swing = False
+            legs[1].swing = False
+            legs[2].swing = False
+            legs[3].swing = False
 
-        elif self.phase == 8:
+        elif self.phase == 18:
             # relocate COM to 0.0
             self.leg_swing['front_left'] = False
             self.leg_swing['back_left'] = False
@@ -295,12 +394,27 @@ class Gait:
 
         for i in range(len(legs)):
             if legs[i].swing == True:
+                #y, z = self.trajectorySwingYZ(-current_y, current_z, self.t) # original before push down leg fix
+                #y, z = self.trajectorySwingYZ(-current_y, legs[i].z_local_goal, self.t)
+                #if self.phase == 4 or self.phase == 8 or self.phase == 12 or self.phase == 16:
+                #    current_z = self.current_z
+                #    print("z: ", self.current_z)
                 y, z = self.trajectorySwingYZ(-current_y, current_z, self.t)
                 if legs[i].side == "right":
                     y = -y
 
                 legAng[i] = legs[i].computeLocalInverseKinematics(np.array([legs[i].x_local_goal, y, z]))
                 legs[i].y_local_goal = y
+
+                if self.t == 1.0:
+                    current_pos = legs[i].computeLocalForwardKinematics(legs[i].joints)
+                    if current_pos[1] < y + y_margin and current_pos[1] > y - y_margin:
+                        if current_pos[2] < z + z_margin and current_pos[2] > z - z_margin:
+                            self.t = 0.0
+                            self.phase += 1
+                            legs[i].swing = False
+                            #self.leg_swing['front_left'] = False
+
 
         return self.leg_swing, legAng[0], legAng[1], legAng[2], legAng[3]
 

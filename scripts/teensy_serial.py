@@ -159,8 +159,3 @@ class serial_teensy:
         new_array = self.convert_string_to_ints(value)
         #print(new_array)
         return new_array
-
-
-    #alternatively while untill new_value is true.
-    def issue_reading_command(self):
-        self.serial_write("R")

@@ -53,6 +53,7 @@ class QuadLeg:
 
         self.__setDHParams()
         self.__computeForwardKinematics()
+        #se
 
 
     def __setDHParams(self):

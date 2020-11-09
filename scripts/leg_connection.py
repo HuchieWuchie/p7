@@ -2,22 +2,33 @@ from teensy_serial import serial_teensy
 import numpy as np
 import threading
 import time
+import os
 
 class leg_connection:
-    def __init__(self,name_serial_port='/dev/tty.usbmodem58778701',use_velocity=False):
+    def __init__(self,name_serial_port='/dev/tty.usbmodem58778701',use_velocity=False, using_current=False):
         ###### inits the serial connection here. Specify serial name here
         self.serial=serial_teensy(serial_name=name_serial_port,use_velocity=use_velocity)
-
+        self.using_current=using_current
         #assigning the offsets
-        self.offset_raw_leg_1=[3675,1507,900+1022] #946 #leg 1   Front Right zero 1 is 2625
-        self.offset_raw_leg_2=[1500,1520,1400+1022] #1488 #leg 2  Front Left   zero is 1500
-        self.offset_raw_leg_3=[1100,997,2957+1022]  #leg 3  Back Right    3150
-        self.offset_raw_leg_4=[1050,2535,2488+1022]  #leg 4  Back left     1000
+        #new
+        #self.offset_raw_leg_1=[3675,1497,875+1022] #leg 1   Front Right zero 1 is 2625
+        #self.offset_raw_leg_2=[1500,1517,1481+1022] #leg 2  Front Left   zero is 1500
+
+        #self.offset_raw_leg_3=[1100,1011,2945+1022]  #leg 3  Back Right    3150
+        #self.offset_raw_leg_4=[1050,2536,2443+1022]  #leg 4  Back left     1000
+
+        #old..
+        self.offset_raw_leg_1=[3675,1507-511,900+1022] #leg 1   Front Right zero 1 is 2625
+        self.offset_raw_leg_2=[1500-50,1520-511,1400+1022] #leg 2  Front Left   zero is 1500
+        self.offset_raw_leg_3=[1100,997-511,2957+1022]  #leg 3  Back Right    3150
+        self.offset_raw_leg_4=[1050-50,2535-511,2488+1022]  #leg 4  Back left     1000
+
         self.offset_raw=np.append(np.append(np.append(self.offset_raw_leg_1,self.offset_raw_leg_2),self.offset_raw_leg_3),self.offset_raw_leg_4)
 
         self.negative_threshold=4092
 
         self.number_of_motors=12
+        self.current_threshold = 1000  #####mA
         self.moveThread = threading.Thread(target=self.read).start()
     def set_offset(self, offset_raw_value):
         self.offset_raw = offset_raw_value
@@ -61,6 +72,14 @@ class leg_connection:
         foot_sensors=np.asarray(status)[12:16]
         return pos_rad,foot_sensors
 
+    def read_leg_status_w_current(self):
+        status=self.serial.read_status()
+        pos_rad=self.serial.convert_rawvalue_2_radians(np.asarray(status)[0:self.number_of_motors]-self.offset_raw)
+        present_current=self.check_for_negative_values(np.asarray(status)[self.number_of_motors:self.number_of_motors*2])
+        present_current=present_current*3.36
+        foot_sensors=np.asarray(status)[self.number_of_motors*2:self.number_of_motors*2+4]
+        return pos_rad,foot_sensors,present_current
+
     def read_leg_status_velocity(self):
         status=self.serial.read_status()
         pos_raw=self.serial.convert_rawvalue_2_radians(np.asarray(status)[0:self.number_of_motors]-self.offset_raw)
@@ -81,13 +100,22 @@ class leg_connection:
         return array
 
     def read(self):
+        self.init_current_watch()
         while True:
-            self.pos_rad, self.foot = self.read_leg_status()
+            if self.using_current:
+                self.pos_rad, self.foot, self.current = self.read_leg_status_w_current()
+                #function to log the current
+                self.watching_current_usage(self.current)
+            else:
+                self.pos_rad, self.foot = self.read_leg_status()
             #print(self.pos_rad)
             time.sleep(0.001)
 
     def get_status(self):
-        return self.pos_rad,self.foot
+        if self.using_current:
+            return self.pos_rad, self.foot, self.current
+        else:
+            return self.pos_rad,self.foot
 
 
     ####### Previosly used function. Still working, but not supported B-)
@@ -106,3 +134,29 @@ class leg_connection:
         joint_raw_value = self.serial.convert_radians_2_rawvalue(joints_radians)
         output_raw_value = self.serial.convert_radians_2_rawvalue(self.offset_radians) + joint_raw_value
         self.serial.send_positions_array_ints(output_raw_value)
+
+    def init_current_watch(self):
+        self.start_time=time.time()
+        if os.path.isfile("current_watch.txt"):
+            os.remove("current_watch.txt")
+        f = open("current_watch.txt", "a")
+        f.write("If the file is empty, the current threshold of \t")
+        f.write(str(self.current_threshold))
+        f.write("\t has not been exceeded on any of the motors!\n")
+        f.close()
+
+    def watching_current_usage(self,current):
+        for i in range(0,12):
+            if current[i]>self.current_threshold or current[i]<-1*self.current_threshold:
+                f = open("current_watch.txt", "a")
+                ###current usage for motor
+                ###write it to file
+                f.write("current exceeded for motor\t")
+                f.write(str(i))
+                f.write("\tWith a Value of\t")
+                f.write(str(int(current[i])))
+                f.write("\tafter\t")
+                f.write(str(int(time.time()-self.start_time)))
+                f.write("\tseconds")
+                f.write("\n")
+                f.close()
