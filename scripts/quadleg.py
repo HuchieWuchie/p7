@@ -20,7 +20,9 @@ class QuadLeg:
             # The initial values from Gazebo simulation, as initial joint
             # positions from Gazebo are [0, 0, 0], so to fix internal
             # kinematics
-            self.joint_initial = joints
+            self.joint_initial = np.array([0.0, 0.0, 0.0])
+            #pass
+            #self.joint_initial = joints
 
 
         joints.dtype = 'double'

@@ -18,8 +18,8 @@ class leg_connection:
         #self.offset_raw_leg_4=[1050,2536,2443+1022]  #leg 4  Back left     1000
 
         #old..
-        self.offset_raw_leg_1=[3675,1507-511,900+1022] #leg 1   Front Right zero 1 is 2625
-        self.offset_raw_leg_2=[1500-50,1520-511,1400+1022] #leg 2  Front Left   zero is 1500
+        self.offset_raw_leg_1=[2091+50,1507-511,900+1022] #leg 1   Front Right zero 1 is 2625
+        self.offset_raw_leg_2=[2585-100,1520-511,1400+1022] #leg 2  Front Left   zero is 1500 # maybe remove -50
         self.offset_raw_leg_3=[1100,997-511,2957+1022]  #leg 3  Back Right    3150
         self.offset_raw_leg_4=[1050-50,2535-511,2488+1022]  #leg 4  Back left     1000
 

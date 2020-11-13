@@ -1,549 +1,293 @@
 import numpy as np
+from fractions import Fraction
+import time
 
 class Gait:
     """Currently only contains creep gait"""
 
-    def __init__(self, legs,frequency):
+    def __init__(self, quad, frequency):
         self.leg_swing = {'front_right': False,
                     'front_left': False,
                     'back_right': False,
                     'back_left': False}
         self.t = 0 # paramaterization of gait phase from 0 to 1
         self.frequency = frequency
+        self.quad = quad
 
-        self.setHeight(0.1) # currently not used
-        self.setStepSize(0.00) # currently not used
-        self.setPhaseTime(0.2)
-        self.phase = 1
-        self.y0 = -legs[0].y_local_goal
-        self.y1 = legs[1].y_local_goal
-        self.y2 = legs[2].y_local_goal
-        self.y3 = -legs[3].y_local_goal
+        self.supportPhase = 0 # Used to keep track of which COM manipulation is needed
+
+        self.setStepHeight(0.1) # currently not used
+        self.setStepSize(0.05) # currently not used
+        self.setDutyCycle(0.875)
+        self.setCycleTime(5.0)
+
+        self.getTResolution()
+        self.getCOMTransitionTime()
 
         self.t0 = 0
         self.t1 = 0
-        self.t2 = 0
-        self.t3 = 0
-        self.i = 0
 
-    def setHeight(self, h):
-        self.height = h
+        # phase offsets for front right, back left, front left, back right
+        self.phaseOffset = np.array([0.5, self.dutyCycle, 0.0, self.dutyCycle-0.5])
+
+        self.legsDelta = np.zeros((4,3))
+        self.tracker = 0
+
+    def setStepHeight(self, h):
+        """ Ground clearance height """
+        self.stepHeight = h
 
     def setStepSize(self, s):
+        """ Forward step size in y axis """
         self.stepSize = s
 
-    def setPhaseTime(self, t):
-        self.phaseTime = t
-
-    def getStepSize(self):
-        self.stepSize = self.transl_vel * self.phaseTime
-
-    def creep(self, transl_vel, ang_vel, legs, current_z, current_y):
-        """ input translational velocity and angular velocity in m/s and rad/s
-            output end effector positions for each leg that satisfies that
-        """
-
-        self.transl_vel = 4*transl_vel
-        self.ang_vel = ang_vel
-        self.getStepSize()
+    def setCycleTime(self, t):
+        """ Time in seconds for a complete gait cycle to complete """
+        self.cycleTime = t
         self.getTResolution()
-        self.t = self.t + self.t_res
-
-        if self.t > 1.0:
-            self.t = 1.0
-
-        legAng = []
-
-        self.t0 += 0.25*self.t_res
-        self.t1 += 0.25*self.t_res
-        self.t2 += 0.25*self.t_res
-        self.t3 += 0.25*self.t_res
-        if self.t0 > 1.0:
-            self.t0 = 1.0
-        if self.t1 > 1.0:
-            self.t1 = 1.0
-        if self.t2 > 1.0:
-            self.t2 = 1.0
-        if self.t3 > 1.0:
-            self.t3 = 1.0
-
-
-        # When self.i < 5. compute standing legs for legs not moving
-        for i in range(len(legs)):
-            legAng.append(legs[i].computeLocalInverseKinematics(np.array([legs[i].x_local_goal, legs[i].y_local_goal, legs[i].z_local_goal])))
-
-        if self.i >= 3:
-            y, z = self.trajectoryStance(-current_y, current_z, self.t0)
-            legFR = legs[0].computeLocalInverseKinematics(np.array([legs[0].x_local_goal, -y, z]))
-            legAng[0] = legFR
-
-        if self.i >= 2:
-            y, z = self.trajectoryStance(-current_y, current_z, self.t1)
-            legBL = legs[1].computeLocalInverseKinematics(np.array([legs[1].x_local_goal, y, z]))
-            legAng[1] = legBL
-
-        if self.i >= 1:
-            y, z = self.trajectoryStance(-current_y, current_z, self.t2)
-            legFL = legs[2].computeLocalInverseKinematics(np.array([legs[2].x_local_goal, y, z]))
-            legAng[2] = legFL
-
-        if self.i > 4:
-            y, z = self.trajectoryStance(-current_y, current_z, self.t3)
-            legBR = legs[3].computeLocalInverseKinematics(np.array([legs[3].x_local_goal, -y, z]))
-            legAng[3] = legBR
-
-        # close the phase loop
-        if self.phase > 4:
-            self.phase = 1
-
-        if self.phase == 1:
-            self.leg_swing['front_left'] = True
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = True
-            legs[3].swing = False
-
-            if self.t == 1.0:
-                self.t2 = 0.0
-                self.leg_swing['front_left'] = False
-                legs[2].swing = False
-
-        elif self.phase == 2:
-            self.leg_swing['back_left'] = True
-            legs[0].swing = False
-            legs[1].swing = True
-            legs[2].swing = False
-            legs[3].swing = False
-
-            if self.t == 1.0:
-                self.t1 = 0.0
-                self.leg_swing['back_left'] = False
-                legs[1].swing = False
-                self.i += 1
-
-        elif self.phase == 3:
-            self.leg_swing['front_right'] = True
-            legs[0].swing = True
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-            if self.t == 1.0:
-                self.t0 = 0.0
-                self.leg_swing['front_right'] = False
-                legs[0].swing = False
-                self.i += 1
-
-        elif self.phase == 4:
-            self.leg_swing['back_right'] = True
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = True
-
-            if self.t == 1.0:
-                self.t3 = 0.0
-                self.leg_swing['back_right'] = False
-                legs[3].swing = False
-                self.i += 1
-
-        for i in range(len(legs)):
-            if legs[i].swing == True:
-                y, z = self.trajectorySwingYZ(-current_y, current_z, self.t)
-                x_goal = legs[i].x_local_goal
-                x, _ = self.trajectorySwingXZ(legs[i].x_local_goal, current_z, self.t, legs[i].name)
-                if legs[i].side == "right":
-                    y = -y
-                legAng[i] = legs[i].computeLocalInverseKinematics(np.array([x, y, z]))
-                legs[i].x_local_goal = x_goal
-
-        if self.t == 1.0:
-            self.t = 0.0
-            self.phase += 1
-
-        return self.leg_swing, legAng[0], legAng[1], legAng[2], legAng[3]
-
-    def stableCreep(self, stepSize, legs, current_z, current_y):
-        """ input translational velocity and angular velocity in m/s and rad/s
-            output end effector positions for each leg that satisfies that
-        """
-        y_margin = stepSize * 0.1
-        z_margin = 0.01
-        self.stepSize = stepSize
-        #self.t_res = 0.3 / self.frequency
-        self.t_res = 0.1 / self.frequency
-        #self.current_z
-        if self.phase == 4 or self.phase == 8 or self.phase == 12 or self.phase == 16:
-            if self.t == 0:
-                if self.phase == 4:
-                    self.current_z = legs[2].z_local_goal
-                elif self.phase == 8:
-                    self.current_z = legs[3].z_local_goal
-                elif self.phase == 12:
-                    self.current_z = legs[0].z_local_goal
-                elif self.phase == 16:
-                    self.current_z = legs[1].z_local_goal
-            self.t = self.t + self.t_res
-
-        if self.t > 1.0:
-            self.t = 1.0
-
-        legAng = []
-
-        # When self.i < 5. compute standing legs for legs not moving
-        for i in range(len(legs)):
-            legAng.append(legs[i].computeLocalInverseKinematics(np.array([legs[i].x_local_goal, legs[i].y_local_goal, legs[i].z_local_goal])))
-
-        # close the phase loop
-        if self.phase > 18:
-            self.phase = 1
-
-        if self.phase == 1:
-            # Initial position
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = False
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-        elif self.phase == 2:
-            # relocate COM to -0.13
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = False
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-        elif self.phase == 3:
-            # relocate COM to 0.0
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = False
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-        elif self.phase == 4:
-            self.leg_swing['front_left'] = True
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = False
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = True
-            legs[3].swing = False
-
-        elif self.phase == 5:
-            # relocate COM to 0.0
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = False
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-        elif self.phase == 6:
-            # relocate COM to -0.13
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = False
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-        elif self.phase == 7:
-            # relocate COM to 0.0
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = False
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-        elif self.phase == 8:
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = True
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = True
-
-        elif self.phase == 9:
-            # relocate COM to 0.0
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = False
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-        elif self.phase == 10:
-            # relocate COM to 0.13
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = False
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-        elif self.phase == 11:
-            # relocate COM to 0.0
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = False
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-        elif self.phase == 12:
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = True
-            self.leg_swing['back_right'] = False
-            legs[0].swing = True
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-        elif self.phase == 13:
-            # relocate COM to 0.0
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = False
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-        elif self.phase == 14:
-            # relocate COM to -0.13
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = False
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-        elif self.phase == 15:
-            # relocate COM to 0.0
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = False
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-        elif self.phase == 16:
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = True
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = False
-            legs[0].swing = False
-            legs[1].swing = True
-            legs[2].swing = False
-            legs[3].swing = False
-
-        elif self.phase == 17:
-            # relocate COM to 0.0
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = False
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-        elif self.phase == 18:
-            # relocate COM to 0.0
-            self.leg_swing['front_left'] = False
-            self.leg_swing['back_left'] = False
-            self.leg_swing['front_right'] = False
-            self.leg_swing['back_right'] = False
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = False
-            legs[3].swing = False
-
-        for i in range(len(legs)):
-            if legs[i].swing == True:
-                #y, z = self.trajectorySwingYZ(-current_y, current_z, self.t) # original before push down leg fix
-                #y, z = self.trajectorySwingYZ(-current_y, legs[i].z_local_goal, self.t)
-                #if self.phase == 4 or self.phase == 8 or self.phase == 12 or self.phase == 16:
-                #    current_z = self.current_z
-                #    print("z: ", self.current_z)
-                y, z = self.trajectorySwingYZ(-current_y, current_z, self.t)
-                if legs[i].side == "right":
-                    y = -y
-
-                legAng[i] = legs[i].computeLocalInverseKinematics(np.array([legs[i].x_local_goal, y, z]))
-                legs[i].y_local_goal = y
-
-                if self.t == 1.0:
-                    current_pos = legs[i].computeLocalForwardKinematics(legs[i].joints)
-                    if current_pos[1] < y + y_margin and current_pos[1] > y - y_margin:
-                        if current_pos[2] < z + z_margin and current_pos[2] > z - z_margin:
-                            self.t = 0.0
-                            self.phase += 1
-                            legs[i].swing = False
-                            #self.leg_swing['front_left'] = False
-
-
-        return self.leg_swing, legAng[0], legAng[1], legAng[2], legAng[3]
-
-    def trot(self, transl_vel, ang_vel, legs, current_z, current_y):
-        """ input translational velocity and angular velocity in m/s and rad/s
-            output end effector positions for each leg that satisfies that
-        """
-        self.setPhaseTime(0.4)
-        self.transl_vel = 4*transl_vel
-        self.ang_vel = ang_vel
-        self.getStepSize()
-        self.getTResolution()
-        self.t = self.t + self.t_res
-        if self.t > 1.0:
-            self.t = 1.0
-
-        legAng = []
-
-        self.t0 += self.t_res
-        self.t1 += self.t_res
-        self.t2 += self.t_res
-        self.t3 += self.t_res
-        if self.t0 > 1.0:
-            self.t0 = 1.0
-        if self.t1 > 1.0:
-            self.t1 = 1.0
-        if self.t2 > 1.0:
-            self.t2 = 1.0
-        if self.t3 > 1.0:
-            self.t3 = 1.0
-
-
-        # When self.i < 5. compute standing legs for legs not moving
-        for i in range(len(legs)):
-            legAng.append(legs[i].computeLocalInverseKinematics(np.array([legs[i].x_local_goal, legs[i].y_local_goal, legs[i].z_local_goal])))
-
-        if self.i >= 2:
-            y, z = self.trajectoryStance(-current_y, current_z, self.t0)
-            legFR = legs[0].computeLocalInverseKinematics(np.array([legs[0].x_local_goal, -y, z]))
-            legAng[0] = legFR
-
-        if self.i >= 2:
-            y, z = self.trajectoryStance(-current_y, current_z, self.t1)
-            legBL = legs[1].computeLocalInverseKinematics(np.array([legs[1].x_local_goal, y, z]))
-            legAng[1] = legBL
-
-        if self.i >= 1:
-            y, z = self.trajectoryStance(-current_y, current_z, self.t2)
-            legFL = legs[2].computeLocalInverseKinematics(np.array([legs[2].x_local_goal, y, z]))
-            legAng[2] = legFL
-
-        if self.i > 1:
-            y, z = self.trajectoryStance(-current_y, current_z, self.t3)
-            legBR = legs[3].computeLocalInverseKinematics(np.array([legs[3].x_local_goal, -y, z]))
-            legAng[3] = legBR
-
-        # close the phase loop
-        if self.phase > 2:
-            self.phase = 1
-
-        if self.phase == 1:
-            self.leg_swing['front_left'] = True
-            self.leg_swing['back_right'] = True
-            legs[0].swing = False
-            legs[1].swing = False
-            legs[2].swing = True
-            legs[3].swing = True
-
-            if self.t == 1.0:
-                self.t2 = 0.0
-                self.t3 = 0.0
-                self.leg_swing['front_left'] = False
-                self.leg_swing['back_right'] = False
-                legs[2].swing = False
-                legs[3].swing = False
-
-        elif self.phase == 2:
-            self.leg_swing['back_left'] = True
-            self.leg_swing['front_right'] = True
-            legs[0].swing = True
-            legs[1].swing = True
-            legs[2].swing = False
-            legs[3].swing = False
-
-            if self.t == 1.0:
-                self.t1 = 0.0
-                self.t0 = 0.0
-                self.leg_swing['back_left'] = False
-                self.leg_swing['front_right'] = False
-                legs[1].swing = False
-                legs[0].swing = False
-                self.i += 1
-
-        for i in range(len(legs)):
-            if legs[i].swing == True:
-                y, z = self.trajectorySwingYZ(-current_y, current_z, self.t)
-                x_goal = legs[i].x_local_goal
-                x, _ = self.trajectorySwingXZ(legs[i].x_local_goal, current_z, self.t, legs[i].name)
-                if legs[i].side == "right":
-                    y = -y
-                #elif legs[i].side == "right":
-                #    if legs[i].frontBack == "back":
-                #        x = -x
-                #legAng[i] = legs[i].computeLocalInverseKinematics(np.array([legs[i].x_local_goal, y, z]))
-                legAng[i] = legs[i].computeLocalInverseKinematics(np.array([x, y, z]))
-                legs[i].x_local_goal = x_goal
-
-        if self.t == 1.0:
-            self.t = 0.0
-            self.phase += 1
-
-        return self.leg_swing, legAng[0], legAng[1], legAng[2], legAng[3]
+        self.getCOMTransitionTime()
+
+    def setPhase(self, arr):
+        """ Set the phase offset for each leg """
+        pass
 
     def getTResolution(self):
-        """ get T parameter based on translational velocity """
-        self.t_res = (1/self.phaseTime) / self.frequency
+        """ get T parameter resolution"""
+        self.tRes = (1/self.cycleTime) / self.frequency
 
+    def getStride(self):
+        """ The length which the body moves during a gait cycle """
+        return self.stepSize
+
+    def setDutyCycle(self, val):
+        """ Percentage of gait cycle which a leg will be in support phase """
+        self.dutyCycle = max(0.75, min(1.0, val))
+        self.getSwingTime()
+
+
+    def getSwingTime(self):
+        """ Percentage of gait cycle which a leg will be in swing phase """
+        self.swingTime = 1.0 - self.dutyCycle
+
+    def waveGait(self, ang_vel, zCOM, yCOM):
+        """ Wave gait, returns leg angles and booleans for swing phase of legs
+        """
+        self.ang_vel = ang_vel
+        self.zCOM = zCOM
+
+        # COM manipulation between swing phases
+        # Described in deltas: COM_x, COM_y, legFR_z, legBL_z, legFL_z, legBR_z
+        self.COMDelta = np.array([[0, 0, 0, 0.07, 0.07, 0],
+                                [0, 0, 0.07, -0.0, -0.0, 0.07]])
+
+        # uncomment for non wave gaits
+        #self.COMDelta = np.array([[0, 0, 0, 0.0, 0.0, 0],
+        #                        [0, 0, 0.0, -0.0, -0.0, 0.0]])
+
+        #self.phaseOffset = np.array([0.0, 0.0, 0.5, 0.5]) # trot
+        #self.phaseOffset = np.array([0.0, 0.5, 0.0, 0.5]) # pronking
+
+        if self.t > 0.0 and self.t <= 0.5:
+            self.supportPhase = 0
+
+        elif self.t > 0.5 and self.t <= 1.0:
+            self.supportPhase = 1
+
+        legAng = np.zeros((4,3))
+        self.getDelta()
+
+        for i in range(len(self.quad.legs)):
+
+            tStart = self.phaseOffset[i] + self.dutyCycle
+            if self.phaseOffset[i] + self.dutyCycle > 1.0:
+                tStart = abs(1.0 - (self.dutyCycle + self.phaseOffset[i]))
+
+            if self.t > tStart and self.t < self.swingTime + tStart:
+
+                # do swing cycle here
+                t = (self.t - tStart) / self.swingTime # compute swing phase t parameterization resolution
+                y, z = self.trajectorySwingYZ(-yCOM, zCOM, self.stepSize, t)
+                x_goal = self.quad.legs[i].x_local_goal
+                x, _ = self.trajectorySwingXZ(self.quad.legs[i].x_local_goal, zCOM, t, self.quad.legs[i].name)
+                if self.quad.legs[i].side == "right":
+                    y = -y
+                legAng[i] = self.quad.legs[i].computeLocalInverseKinematics(np.array([x, y, z]))
+                self.quad.legs[i].x_local_goal = x_goal
+                self.quad.legs[i].swing = True
+
+            else:
+
+                # Do support phase here
+                t = 0
+                firstSupportPhase = self.dutyCycle + self.phaseOffset[i]
+                if firstSupportPhase >= 1.0:
+                    firstSupportPhase = abs(1.0 - firstSupportPhase)
+
+                if self.t < firstSupportPhase:
+                    t = (self.t + self.dutyCycle - firstSupportPhase) / self.dutyCycle
+                else:
+                    t = (self.t - firstSupportPhase - self.swingTime) / self.dutyCycle
+
+                y, z = self.trajectoryStance(-yCOM, zCOM, self.stepSize, t)
+                if self.quad.legs[i].side == "right":
+                    y = -y
+                legAng[i] = self.quad.legs[i].computeLocalInverseKinematics(np.array([self.quad.legs[i].x_local_goal, y, z + self.legsDelta[i][2]]))
+                self.quad.legs[i].swing = False
+
+        swing = []
+        for i in range(len(self.quad.legs)):
+            swing.append(self.quad.legs[i].swing)
+        self.t += self.tRes
+        if self.t > 1.0:
+            self.t = 0.0
+
+
+        return swing, legAng[0], legAng[1], legAng[2], legAng[3]
+
+    def discontinuousGait(self, zCOM, yCOM):
+        """ Continuous gait, returns leg angles and booleans for swing phase of legs
+        """
+        self.zCOM = zCOM
+
+        # phase offsets for front right, back left, front left, back right
+        self.phaseOffset = np.array([0.5, self.dutyCycle, 0.0, self.dutyCycle-0.5])
+        self.phaseOffset -= self.swingTime
+
+        # COM manipulation between swing phases
+        # Described in deltas: COM_x, COM_y, legFR_z, legBL_z, legFL_z, legBR_z
+        self.COMDelta = np.array([[0, 0, 0, 0.07, 0.07, 0],
+                                [0, 0, 0.07, -0.0, -0.0, 0.07]])
+
+        if self.t > 0.0 and self.t <= 0.375:
+            self.supportPhase = 0
+
+        #if self.t > 0.5 and self.t <= 0.625:
+        #    self.supportPhase = 1
+
+        elif self.t > 0.5 and self.t <= 0.875:
+            self.supportPhase = 1
+
+        legAng = np.zeros((4,3))
+        self.getDelta()
+
+        for i in range(len(self.quad.legs)):
+
+            x = self.quad.x_local_goal + self.legsDelta[i][0]
+            y = self.quad.legs[i].y_local_goal + self.legsDelta[i][1]
+            z = self.zCOM + self.legsDelta[i][2]
+
+            legAng[i] = self.quad.legs[i].computeLocalInverseKinematics(np.array([x,y,z]))
+            self.quad.legs[i].swing = False
+
+            tStart = self.phaseOffset[i] + self.dutyCycle
+            if self.phaseOffset[i] + self.dutyCycle > 1.0:
+                tStart = abs(1.0 - (self.dutyCycle + self.phaseOffset[i]))
+
+            if self.t > tStart and self.t < self.swingTime + tStart:
+
+                # do swing cycle here
+                if self.tracker == 0:
+                    if self.quad.legs[i].side == "right":
+                        self.y_leg_goal = -self.quad.legs[i].y_local_goal
+                    else:
+                        self.y_leg_goal = self.quad.legs[i].y_local_goal
+                    self.tracker = 1
+                t = (self.t - tStart) / self.swingTime # compute swing phase t parameterization resolution
+                #y, z = self.trajectorySwingYZ(-yCOM+self.stepSize, zCOM, self.stepSize, t)
+                y, z = self.trajectorySwingYZ(self.y_leg_goal, zCOM, self.stepSize, t)
+                x = self.quad.legs[i].x_local_goal
+                if self.quad.legs[i].side == "right":
+                    y = -y
+                legAng[i] = self.quad.legs[i].computeLocalInverseKinematics(np.array([x, y, z]))
+                if t >= 1.0 - self.tRes/self.swingTime:
+                    self.quad.legs[i].y_local_goal = y
+                    self.tracker = 0
+                    print(i, t, y)
+                self.quad.legs[i].swing = True
+
+            if self.t > 0.875:
+                if self.tracker == 0:
+                    self.tracker = 1
+                    self.y_leg_goal = self.quad.legs[i].y_local_goal
+
+                t = (self.t - 0.875) / self.swingTime # compute swing phase t parameterization resolution
+                y, z = self.trajectoryStance(-yCOM, zCOM, self.stepSize, t)
+                if self.quad.legs[i].side == "right":
+                    y = -y
+
+                legAng[i] = self.quad.legs[i].computeLocalInverseKinematics(np.array([self.quad.legs[i].x_local_goal, y, z]))
+
+        swing = []
+        for i in range(len(self.quad.legs)):
+            swing.append(self.quad.legs[i].swing)
+        self.t += self.tRes
+        if self.t > 1.0:
+            self.t = 0.0
+            self.tracker = 0
+
+
+        return swing, legAng[0], legAng[1], legAng[2], legAng[3]
+
+    def getCOMTransitionTime(self):
+        """" sets the time to manipulate COM between phases """
+        denominator = Fraction(self.dutyCycle).limit_denominator().denominator
+        self.COMTime = self.tRes / (((denominator - 4) / 4.0 ) / denominator)
+
+    def getDelta(self):
+
+        prevIdx = self.supportPhase - 1
+        if self.supportPhase > 4:
+            self.supportPhase = 0
+            prevIdx = -1
+
+        for i in range(len(self.legsDelta)):
+
+            if self.legsDelta[i][2] > self.COMDelta[self.supportPhase][2+i]:
+                self.legsDelta[i][2] -= abs((self.COMDelta[self.supportPhase][2+i]-self.COMDelta[prevIdx][2+i]) * self.COMTime)
+            else:
+                self.legsDelta[i][2] += abs((self.COMDelta[self.supportPhase][2+i]-self.COMDelta[prevIdx][2+i]) * self.COMTime)
+
+            if self.legsDelta[i][1] > self.COMDelta[self.supportPhase][1]:
+                self.legsDelta[i][1] -= abs((self.COMDelta[self.supportPhase][1]-self.COMDelta[prevIdx][1]) * self.COMTime)
+            else:
+                self.legsDelta[i][1] += abs((self.COMDelta[self.supportPhase][1]-self.COMDelta[prevIdx][1]) * self.COMTime)
+        """
+        if self.legsDelta[0][2] > self.COMDelta[self.supportPhase][2]:
+            self.legsDelta[0][2] -= abs((self.COMDelta[self.supportPhase][2]-self.COMDelta[prevIdx][2]) * self.COMTime)
+        else:
+            self.legsDelta[0][2] += abs((self.COMDelta[self.supportPhase][2]-self.COMDelta[prevIdx][2]) * self.COMTime)
+
+        if self.legsDelta[1][2] > self.COMDelta[self.supportPhase][3]:
+            self.legsDelta[1][2] -= abs((self.COMDelta[self.supportPhase][3]-self.COMDelta[prevIdx][3]) * self.COMTime)
+        else:
+            self.legsDelta[1][2] += abs((self.COMDelta[self.supportPhase][3]-self.COMDelta[prevIdx][3]) * self.COMTime)
+
+        if self.legsDelta[2][2] > self.COMDelta[self.supportPhase][4]:
+            self.legsDelta[2][2] -= abs((self.COMDelta[self.supportPhase][4]-self.COMDelta[prevIdx][4]) * self.COMTime)
+        else:
+            self.legsDelta[2][2] += abs((self.COMDelta[self.supportPhase][4]-self.COMDelta[prevIdx][4]) * self.COMTime)
+
+        if self.legsDelta[3][2] > self.COMDelta[self.supportPhase][5]:
+            self.legsDelta[3][2] -= abs((self.COMDelta[self.supportPhase][5]-self.COMDelta[prevIdx][5]) * self.COMTime)
+        else:
+            self.legsDelta[3][2] += abs((self.COMDelta[self.supportPhase][5]-self.COMDelta[prevIdx][5]) * self.COMTime)
+        """
+        #print(self.supportPhase, self.legsDelta, abs((self.COMDelta[self.supportPhase][5]-self.COMDelta[prevIdx][5]) * self.COMTime), self.COMDelta[self.supportPhase][5])
     def bezierCurveCLinear(self, p0, p1, t):
-        """returns position, velocity and acceleration as a function of parameter t"""
+        """returns position as a function of parameter t"""
 
-        if t < 0 or t > 1:
-            return p0, 0, 0
+        if t <= 0:
+            return p1[0], p1[1]
+
+        elif t >= 1:
+            return p0[0], p0[1]
 
         position = (1-t)*p0 + t*p1
 
         return position[0], position[1]
 
     def bezierCurveCubic(self, p0, p1, p2, p3, t):
-        """returns position, velocity and acceleration as a function of parameter t"""
+        """returns position as a function of parameter t"""
 
         if t < 0 or t > 1:
             return p0, 0, 0
@@ -552,29 +296,34 @@ class Gait:
 
         return position[0], position[1]
 
-    def trajectorySwingYZ(self, y0, z0, t):
+    def trajectorySwingYZ(self, y0, z0, stepSize, t):
+        """ Creates a trajectory for the swing phase in the YZ plane,
+        for linear movement """
         p0 = np.array([y0, z0])
-        p1 = np.array([y0, z0+self.height])
-        p2 = np.array([y0+self.stepSize+(0.5*self.stepSize), z0+self.height])
-        p3 = np.array([y0+self.stepSize, z0])
+        p1 = np.array([y0, z0+self.stepHeight])
+        p2 = np.array([y0+stepSize+(0.5*stepSize), z0+self.stepHeight])
+        p3 = np.array([y0+stepSize, z0])
         y, z = self.bezierCurveCubic(p0,p1,p2,p3,t)
         return y, z
 
     def trajectorySwingXZ(self, x0, z0, t, name=""):
+        """ Creates a trajectory for the swing phase in the XZ plane,
+        for turning. """
         ang_vel = 0.1*self.ang_vel
         if name=="left_front":
             ang_vel = -ang_vel
         elif name=="right_back":
             ang_vel = -ang_vel
         p0 = np.array([x0, z0])
-        p1 = np.array([x0, z0+self.height])
-        p2 = np.array([x0+ang_vel+(0.5*ang_vel), z0+self.height])
+        p1 = np.array([x0, z0+self.stepHeight])
+        p2 = np.array([x0+ang_vel+(0.5*ang_vel), z0+self.stepHeight])
         p3 = np.array([x0+ang_vel, z0])
         x, z = self.bezierCurveCubic(p0,p1,p2,p3,t)
         return x, z
 
-    def trajectoryStance(self, y0, z0, t):
-        p0 = np.array([y0+self.stepSize, z0])
+    def trajectoryStance(self, y0, z0, stepSize, t):
+        """ Support phase trajectory """
+        p0 = np.array([y0+stepSize, z0])
         p1 = np.array([y0, z0])
         y, z = self.bezierCurveCLinear(p0, p1, t)
         return y, z
