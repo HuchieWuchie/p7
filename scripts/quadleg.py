@@ -38,7 +38,7 @@ class QuadLeg:
                                 [0, 0, 0]], dtype='double')
         self.EE = np.array([0, 0, 0], dtype='double')
 
-        self.l1 = 0.05
+        self.l1 = 0.065
         self.l2 = 0.26
         self.l3 = 0.26
 

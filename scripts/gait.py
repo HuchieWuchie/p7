@@ -77,6 +77,8 @@ class Gait:
 
         # COM manipulation between swing phases
         # Described in deltas: COM_x, COM_y, legFR_z, legBL_z, legFL_z, legBR_z
+        #self.COMDelta = np.array([[0, 0, 0, 0.07, 0.07, 0],
+        #                        [0, 0, 0.07, -0.0, -0.0, 0.07]])
         self.COMDelta = np.array([[0, 0, 0, 0.07, 0.07, 0],
                                 [0, 0, 0.07, -0.0, -0.0, 0.07]])
 

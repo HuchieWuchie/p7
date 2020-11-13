@@ -97,7 +97,7 @@ def decrWidth():
     quadruped.deltaX(-0.01)
 
 rdy = 0
-sim = True
+sim = False
 i_limit = 0
 
 if sim == True:
