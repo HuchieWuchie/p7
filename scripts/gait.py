@@ -19,7 +19,7 @@ class Gait:
         self.setStepHeight(0.1) # currently not used
         self.setStepSize(0.05) # currently not used
         self.setDutyCycle(0.875)
-        self.setCycleTime(5.0)
+        self.setCycleTime(30.0)
 
         self.getTResolution()
         self.getCOMTransitionTime()
@@ -32,6 +32,10 @@ class Gait:
 
         self.legsDelta = np.zeros((4,3))
         self.tracker = 0
+
+    def setFrequency(self, val):
+        """ Set hz for gait calculations """
+        self.frequency = max(10, val)
 
     def setStepHeight(self, h):
         """ Ground clearance height """
@@ -79,8 +83,8 @@ class Gait:
         # Described in deltas: COM_x, COM_y, legFR_z, legBL_z, legFL_z, legBR_z
         #self.COMDelta = np.array([[0, 0, 0, 0.07, 0.07, 0],
         #                        [0, 0, 0.07, -0.0, -0.0, 0.07]])
-        self.COMDelta = np.array([[0, 0, 0, 0.03, 0.03, 0],
-                                [0, 0, 0.03, -0.0, -0.0, 0.03]])
+        self.COMDelta = np.array([[0, 0, 0, 0.07, 0.07, 0],
+                                [0, 0, 0.07, -0.0, -0.0, 0.07]])
 
         # phase offsets for front right, back left, front left, back right
         self.phaseOffset = np.array([0.5, self.dutyCycle-self.swingTime, 0.0, self.dutyCycle-0.5-self.swingTime])
