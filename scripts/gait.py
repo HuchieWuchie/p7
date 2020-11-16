@@ -79,8 +79,11 @@ class Gait:
         # Described in deltas: COM_x, COM_y, legFR_z, legBL_z, legFL_z, legBR_z
         #self.COMDelta = np.array([[0, 0, 0, 0.07, 0.07, 0],
         #                        [0, 0, 0.07, -0.0, -0.0, 0.07]])
-        self.COMDelta = np.array([[0, 0, 0, 0.07, 0.07, 0],
-                                [0, 0, 0.07, -0.0, -0.0, 0.07]])
+        self.COMDelta = np.array([[0, 0, 0, 0.03, 0.03, 0],
+                                [0, 0, 0.03, -0.0, -0.0, 0.03]])
+
+        # phase offsets for front right, back left, front left, back right
+        self.phaseOffset = np.array([0.5, self.dutyCycle-self.swingTime, 0.0, self.dutyCycle-0.5-self.swingTime])
 
         # uncomment for non wave gaits
         #self.COMDelta = np.array([[0, 0, 0, 0.0, 0.0, 0],
