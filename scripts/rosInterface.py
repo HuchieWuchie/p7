@@ -12,12 +12,10 @@ from sensor_msgs.msg import JointState
 def command_frequency_subscriber_callback(value):
     global quadruped
     quadruped.setCommandFrequency(value.data)
-    print(quadruped.gait.frequency)
 
 def step_height_subscriber_callback(value):
     global quadruped
     quadruped.setStepHeight(value.data)
-    print(quadruped.gait.stepHeight)
 
 def step_size_subscriber_callback(value):
     global quadruped
@@ -39,7 +37,6 @@ def gait_subscriber_callback(value):
 def translational_velocity_subscriber_callback(value):
     global quadruped
     quadruped.setTranslationalVelocity(value.data)
-    print(quadruped.transl_vel)
 
 
 def angular_velocity_subscriber_callback(value):
@@ -90,7 +87,7 @@ def gait_active_subscriber_callback(value):
 
 
 rospy.init_node('quadruped', disable_signals=True)
-quadruped = Quadruped(simulation = True)
+quadruped = Quadruped(simulation = False)
 
 command_frequency_subscriber = rospy.Subscriber('/quadrupedUI/setCommandFrequency',Int16,
                                                        command_frequency_subscriber_callback)
