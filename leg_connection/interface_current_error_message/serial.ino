@@ -1,92 +1,38 @@
-//IMU functions
-volatile bool mpuInterrupt = false;     // indicates whether MPU interrupt pin has gone high
-void dmpDataReady() {
-    mpuInterrupt = true;
-}
-void setup_imu(){
-   // join I2C bus (I2Cdev library doesn't do this automatically)
-    #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
-        Wire.begin();
-        Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
-    #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
-        Fastwire::setup(400, true);
-    #endif
- 
-    // initialize serial communication
-    // (115200 chosen because it is required for Teapot Demo output, but it's
-    // really up to you depending on your project)
-    //Serial.begin(115200);
-    //while (!Serial); // wait for Leonardo enumeration, others continue immediately
- 
-    // initialize device
-    mpu.initialize();
-    pinMode(INTERRUPT_PIN, INPUT);
- 
-    // verify connection
- 
-    // load and configure the DMP
-    devStatus = mpu.dmpInitialize();
- 
-    // supply your own gyro offsets here, scaled for min sensitivity
-    mpu.setXGyroOffset(220);
-    mpu.setYGyroOffset(76);
-    mpu.setZGyroOffset(-85);
-    mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
- 
-    // make sure it worked (returns 0 if so)
-    if (devStatus == 0) {
-        // Calibration Time: generate offsets and calibrate our MPU6050
-        mpu.CalibrateAccel(6);
-        mpu.CalibrateGyro(6);
-        // turn on the DMP, now that it's ready
-        mpu.setDMPEnabled(true);
- 
-        // enable Arduino interrupt detection
-        attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), dmpDataReady, RISING);
-        mpuIntStatus = mpu.getIntStatus();
- 
-        // set our DMP Ready flag so the main loop() function knows it's okay to use it
-        dmpReady = true;
- 
-        // get expected DMP packet size for later comparison
-        packetSize = mpu.dmpGetFIFOPacketSize();
-    } 
-
-}
-
-
-void readIMU(){
-    // Get the Latest packet 
-    if (mpu.dmpGetCurrentFIFOPacket(fifoBuffer)) {
-      mpu.dmpGetQuaternion(&q, fifoBuffer);
-      mpu.dmpGetGravity(&gravity, &q);
-      mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-    }
-}
- 
-String IMUToString(){
- 
-  String IMUString = "," + String(ypr[0]) + "," + String(ypr[1]) + "," + String(ypr[2]);
-  //Serial.println(IMUString);
-  return(IMUString);
-}
- 
-
-
-
-void send_all_positions(int32_t current_pos[],int foot_sensors[]){
+void send_all_positions(int32_t current_pos[],
+                        int foot_sensors[],
+                        int16_t pre_cur[],
+                        int8_t error_message[]){
   //read_from_all_motors(current_pos);
   String string_to_send="";
   for(int i=0;i<number_of_motors;i++){
     string_to_send += value_2_send(current_pos[i]);
   }
-  
-  for(int i=0;i<number_of_pressure;i++){
-    string_to_send +=value_2_send(foot_sensors[i]);
+
+  //appending the current
+  int32_t threshold_=4092;
+  for(int i=0;i<number_of_motors;i++){
+    if(pre_cur[i]>=0){
+      string_to_send+=value_2_send(pre_cur[i]);
+    }else{
+      int32_t val_negative=(threshold_*2-abs(pre_cur[i]));
+      string_to_send+=value_2_send(val_negative);
+    }
   }
-  
-  string_to_send += IMUToString();
-  
+
+  //appending the error message
+  for(int i=0;i<number_of_motors;i++){
+    string_to_send+=value_2_send(error_message[i]);
+  }
+
+
+  for(int i=0;i<number_of_feet_sensors;i++){
+    if(foot_sensors[i]>0){
+      string_to_send+="1";
+    }else{
+      string_to_send+="0";
+    }
+  }
+
   Serial.println(string_to_send);
   Serial.flush();
 }
@@ -113,36 +59,16 @@ String value_2_send(int32_t val){
     }
 }
 
-
-void change_reverse_mode(bool input,int32_t id){
-  if(input){//Writing it to go to normal mode
-    dxl.writeControlTableItem(DRIVE_MODE, id,0);
-    //0 0 0 0 0 0 0 0
-  }
-  else{//writing it to go to reverse mode
-    dxl.writeControlTableItem(DRIVE_MODE, id,1);
-  }
-}
-
-
 //functions to setup and update the foot sensors:
 void setup_input_sensors_feet(int feet_input_pins[]){
-  //for(int i=0;i<number_of_feet_sensors;i++){
-  //  pinMode(feet_input_pins[i], INPUT);
-  //}
+  for(int i=0;i<number_of_feet_sensors;i++){
+    pinMode(feet_input_pins[i], INPUT);
+  }
 }
 
-//Binary sensors
 void update_feet_sensors(int feet_touchin[], int feet_input_pins[]){
- // for(int i=0;i<number_of_feet_sensors;i++){
- //    feet_touchin[i]=digitalRead(feet_input_pins[i]);
- // }
-}
-
-//read pressure sensors
-void readPressureSensors(int8_t pressurePin[],int pressureValue[]){
-  for(int i=0;i<number_of_pressure;i++){
-    pressureValue[i]=analogRead(pressurePin[i]);
+  for(int i=0;i<number_of_feet_sensors;i++){
+      feet_touchin[i]=digitalRead(feet_input_pins[i]);
   }
 }
 
@@ -152,8 +78,8 @@ const uint8_t DXL_ID_CNT = number_of_motors;
 const uint16_t user_pkt_buf_cap = 256;
 uint8_t user_pkt_buf[user_pkt_buf_cap];
 struct br_data_xel{
-  //int16_t present_current;
-  //int32_t present_velocity;
+  int16_t present_current;
+  int32_t present_velocity;
   int32_t present_position;
 } __attribute__((packed));
 
@@ -178,8 +104,8 @@ void setup_bulk_read(){
       //dxl.setOperatingMode(DXL_ID[i], OP_POSITION);
       Serial.print("ids: ");Serial.println(DXL_ID[i]);
       info_xels_br[i].id = DXL_ID[i];
-      info_xels_br[i].addr = 132; //Position of X serise.
-      info_xels_br[i].addr_length = 4; // Present Position
+      info_xels_br[i].addr = 126; //Position of X serise.
+      info_xels_br[i].addr_length = 2+4+4; // Present Position
       info_xels_br[i].p_recv_buf = (uint8_t*)&br_data[i];
       br_infos.xel_count++;
     }else{
@@ -218,16 +144,18 @@ void setup_bulk_write(){
 }
 
 //It is changed to bulk read here.
-void read_from_all_motors(int32_t current_pos[]){
+void read_from_all_motors(int32_t current_pos[],int16_t pres_cur[]){
   //change to bulk read here
   uint8_t recv_cnt = dxl.bulkRead(&br_infos); 
   if(recv_cnt>0){
     for(int i=0;i<number_of_motors;i++){
     int32_t current_position=br_data[i].present_position;
+    int16_t present_cur=br_data[i].present_current;
+    current_pos[i]=current_position;
+    pres_cur[i]=present_cur;
     //only used for debug
     //Serial.print(DXL_ID[i]);Serial.print("   motor   ");
     //sSerial.println(current_position);
-    current_pos[i]=current_position;
     }
   }
   else{
@@ -314,7 +242,7 @@ bool update_is_allowed(int32_t current_pose,int32_t target_pose,int index){
   if(margin<margin_allowed[index]){
     return true;
   }
-  return true;
+  return false;
 }
 
 //maybe set goal position with bulk write
@@ -350,6 +278,18 @@ void ping_all_motors(){
   }
 }
 
+void read_error_message(int8_t temp_array[]){
+    for(int i=0;i<number_of_motors;i++){
+    temp_array[i]=dxl.readControlTableItem(HARDWARE_ERROR_STATUS,DXL_ID[i]);
+  }
+}
+
+
+void read_temperature(int8_t temp_array[]){
+    for(int i=0;i<number_of_motors;i++){
+    temp_array[i]=dxl.readControlTableItem(PRESENT_TEMPERATURE,DXL_ID[i]);
+  }
+}
 
 //Example used to read position gain from motors
 void set_position_gain(int16_t gain_){

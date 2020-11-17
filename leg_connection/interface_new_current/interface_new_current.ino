@@ -127,8 +127,6 @@ int32_t current_positions[number_of_motors];
 //array used to store reference/target positions
 int32_t reference_positions[number_of_motors];
 int16_t present_current[number_of_motors];
-//only used for debug.
-elapsedMicros start_time;
 
 void loop() {
   //updating the current positions
@@ -141,9 +139,11 @@ void loop() {
   //function to update all the foor sensors
   //update_feet_sensors(feet_touching,feet_input_pins);
   //Serial.println(start_time);
-  start_time=0;
+  //start_time=0;
+  
   read_from_all_motors(current_positions,present_current);
 
+  //read_temperature(present_temperature);
 
   send_all_positions(current_positions,feet_touching,present_current);
   //check if there is update from the serial port;
@@ -161,7 +161,9 @@ void loop() {
   //if it has been executed.
   execute_current_target(motors_targets,current_positions,
                          reference_positions);
-  
+                         
+
+  //Serial.println();
   //set this delay lower...
   //delay(1);
 }

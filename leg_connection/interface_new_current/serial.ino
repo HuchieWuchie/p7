@@ -16,8 +16,6 @@ void send_all_positions(int32_t current_pos[],int foot_sensors[],int16_t pre_cur
     }
   }
 
-
-  //appending the feetsensors
   for(int i=0;i<number_of_feet_sensors;i++){
     if(foot_sensors[i]>0){
       string_to_send+="1";
@@ -26,7 +24,7 @@ void send_all_positions(int32_t current_pos[],int foot_sensors[],int16_t pre_cur
     }
   }
 
-  
+
   Serial.println(string_to_send);
   Serial.flush();
 }
@@ -272,6 +270,11 @@ void ping_all_motors(){
   }
 }
 
+void read_temperature(int8_t temp_array[]){
+    for(int i=0;i<number_of_motors;i++){
+    temp_array[i]=dxl.readControlTableItem(PRESENT_TEMPERATURE,DXL_ID[i]);
+  }
+}
 
 //Example used to read position gain from motors
 void set_position_gain(int16_t gain_){

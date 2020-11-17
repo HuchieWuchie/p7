@@ -8,7 +8,7 @@ class serial_teensy:
         self.read_velocites=use_velocity
         self.available=True
 
-
+        self.length_reading=64
     def convert_rawvalue_2_degree(self,rawvalue):
         return np.asarray(rawvalue)*0.088
 
@@ -63,19 +63,23 @@ class serial_teensy:
 
 
     def convert_string_to_ints(self,string_of_numbers):
-        length=len(string_of_numbers)
+        length=self.length_reading
+        #print(length)
         stri=str(string_of_numbers)
-        #print(stri)
         array=[]
         prev_val=0
-        for i in range(1,length+1):
-            if i>length-4:
-                array.append(int(stri[i-1]))
-            elif i%4==0:
+        for i in range(1, length + 1):
+            #if i > length - 4:
+            #    print(int(stri[i - 1]))
+            #    array.append(int(stri[i - 1]))
+            if i%4==0:
                 array.append(int(stri[prev_val:i]))
                 prev_val=i
 
+        array.append(stri[self.length_reading:len(string_of_numbers)])
+
         return array
+
 
 
 
@@ -155,7 +159,6 @@ class serial_teensy:
             new_value, value = self.serial_reading_line()
             #print(new_value)
             #print(value)
-        #print(value)
         new_array = self.convert_string_to_ints(value)
         #print(new_array)
         return new_array
