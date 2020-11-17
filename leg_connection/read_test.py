@@ -11,7 +11,7 @@ while True:
     time.sleep(0.03)
     pos_rad,_,imu= leg_con.get_status()
 
-    print(pos_rad)
+    print(imu)
     #leg_con.execute_joint_position_radians(pos_raw)
     i=0
 

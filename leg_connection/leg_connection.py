@@ -68,7 +68,6 @@ class leg_connection:
     ###### 0 is front right, 1 is front left, 2 is back right, 3 is back left.
     def read_leg_status(self):
         status=self.serial.read_status()
-        #print(status)
         temp=np.asarray(status[0:12],dtype=np.int_)
         pos_rad=self.serial.convert_rawvalue_2_radians(temp-self.offset_raw)
 

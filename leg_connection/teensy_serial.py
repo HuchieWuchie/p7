@@ -46,6 +46,7 @@ class serial_teensy:
         else:
             return False,False
 
+
     def serial_write(self,output):
         #output=','.join(output)
         #ser.write(str(output).encode('utf-8'))
@@ -64,21 +65,24 @@ class serial_teensy:
 
     def convert_string_to_ints(self,string_of_numbers):
         length=self.length_reading
-        #print(length)
         stri=str(string_of_numbers)
+        print(stri)
         array=[]
         prev_val=0
-        for i in range(1, length + 1):
-            #if i > length - 4:
-            #    print(int(stri[i - 1]))
-            #    array.append(int(stri[i - 1]))
-            if i%4==0:
-                array.append(int(stri[prev_val:i]))
-                prev_val=i
+        if len(string_of_numbers)>64:
+            for i in range(1, length + 1):
+                #if i > length - 4:
+                #    print(int(stri[i - 1]))
+                #    array.append(int(stri[i - 1]))
+                if i%4==0:
+                    array.append(int(stri[prev_val:i]))
+                    prev_val=i
 
-        array.append(stri[self.length_reading:len(string_of_numbers)])
+            array.append(stri[self.length_reading:len(string_of_numbers)])
 
-        return array
+            return array
+        else:
+            return np.asarray([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
 
 
 
