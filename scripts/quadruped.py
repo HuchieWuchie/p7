@@ -9,6 +9,7 @@ import time
 from gait import Gait
 from quadleg import QuadLeg
 from quadbody import QuadBody
+import csv
 
 import rospy
 from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryActionGoal, FollowJointTrajectoryGoal
@@ -62,7 +63,7 @@ class Quadruped:
         self.y_local_goal = self.COM[1]
         self.z_local_goal = self.COM[2]
 
-        self.commandFrequency = 80
+        self.commandFrequency = 85
         self.gait = Gait(self,frequency = self.commandFrequency)
 
         self.setTranslationalVelocity(0.0)
@@ -72,11 +73,14 @@ class Quadruped:
         self.readyToWalk = False
         self.moveThread = threading.Thread(target=self.move).start()
 
+        self.csvFileReadLog = open("test_read_log.txt", 'a')
+        self.csvFileCommandLog = open("test_command_log.txt", 'a')
+
         if self.simulation == False:
             #self.leg_con = leg_connection(name_serial_port='/dev/ttyACM0',using_current=True)
             self.leg_con = leg_connection(name_serial_port='/dev/ttyACM0')
             self.time_frequency = time.time()
-            self.stateUpdateFrequency = 40 # hz
+            self.stateUpdateFrequency = 85 # hz
             time.sleep(3)
             self.stateReadThread = threading.Thread(target=self.updateState).start()
 
@@ -167,6 +171,9 @@ class Quadruped:
                     #moving, q0,q1,q2,q3 = self.gait.discontinuousGait(self.z_local_goal, self.y_local_goal)
                     joints = np.array([q0,q1,q2,q3])
                     self.sendJointCommand(joints)
+                    csv_string = str(self.gait.t) + "," + str(self.legs[0].joints).replace("[","").replace("]","").replace(" ", ",") + str(self.legs[1].joints).replace("[","").replace("]","").replace(" ", ",") + str(self.legs[2].joints).replace("[","").replace("]","").replace(" ", ",") + str(self.legs[3].joints).replace("[","").replace("]","").replace(" ", ",") + "," + str(self.legs[0].swing) + "," + str(self.legs[1].swing) + "," + str(self.legs[2].swing) + "," + str(self.legs[3].swing) + "\n"
+                    self.csvFileCommandLog.write(csv_string)
+                    self.csvFileCommandLog.flush()
                 #elif self.gaitStyle == 1:
                 #    moving, q0,q1,q2,q3 = self.gait.trot(self.transl_vel, self.ang_vel, self.legs, self.z_local_goal, self.y_local_goal)
                 #    joints = np.array([q0,q1,q2,q3])
@@ -674,12 +681,16 @@ class Quadruped:
 
     def update_positions_leg_from_robot(self):
         #updating the independent leg positions.
-        current_pos,_= self.leg_con.get_status()
+        current_pos, feet, imu= self.leg_con.get_status()
         self.legs[0].setJointPositions(current_pos[0:3])##front right # correct
         self.legs[2].setJointPositions(-current_pos[3:6])##fron left # correct
         self.legs[3].setJointPositions(current_pos[6:9])##back right # correct
         self.legs[1].setJointPositions(-current_pos[9:12])##back left
 
+        #fr fl br bl
+        csv_string = str(self.gait.t) + "," + str(self.legs[0].joints).replace("[","").replace("]","").replace(" ", ",") + str(self.legs[1].joints).replace("[","").replace("]","").replace(" ", ",") + str(self.legs[2].joints).replace("[","").replace("]","").replace(" ", ",") + str(self.legs[3].joints).replace("[","").replace("]","").replace(" ", ",") + "," + str(feet[0]) + "," + str(feet[3]) + "," + str(feet[1]) + "," + str(feet[2]) + str(imu[0]) + "\n"
+        self.csvFileReadLog.write(csv_string)
+        self.csvFileReadLog.flush()
     def joint_state_subscriber_callback(self, joint_state):
             joint_state_cp = copy.deepcopy(joint_state)
             joint_state_cp = np.asarray(joint_state_cp.position)
