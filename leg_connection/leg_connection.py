@@ -113,6 +113,7 @@ class leg_connection:
 
     def read(self):
         self.init_current_watch()
+        #self.serial.flushInput()
         while True:
             if self.using_current:
                 self.pos_rad, self.foot, self.current = self.read_leg_status_w_current()
