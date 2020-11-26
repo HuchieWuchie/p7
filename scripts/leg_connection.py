@@ -11,17 +11,17 @@ class leg_connection:
         self.using_current=using_current
         self.using_error_messages=using_error_message
         #assigning the offsets
-        #new
-        self.offset_raw_leg_1=[2091+60,1023,2045-136] #leg 1   Front Right zero 1 is 2625
-        self.offset_raw_leg_2=[2585-127,1023,2556-136] #leg 2  Front Left   zero is 1500 # maybe remove -50
-        self.offset_raw_leg_3=[1100+20,511,4095-136]  #leg 3  Back Right    3150
-        self.offset_raw_leg_4=[1050-80,2047,3583-136]  #leg 4  Back left     1000
+        #the gold standard of offsets
+        #self.offset_raw_leg_1=[2091+60,1023,2045-136] #leg 1   Front Right zero 1 is 2625
+        #self.offset_raw_leg_2=[2585-127,1023,2556-136] #leg 2  Front Left   zero is 1500 # maybe remove -50
+        #self.offset_raw_leg_3=[1100+20,511,4095-136]  #leg 3  Back Right    3150
+        #self.offset_raw_leg_4=[1050-80,2047,3583-136]  #leg 4  Back left     1000
 
-        #old..
-        #self.offset_raw_leg_1=[2585,1507-511,900+1022] #leg 1   Front Right zero 1 is 2625
-        #self.offset_raw_leg_2=[2091-100,1520-511,1400+1022] #leg 2  Front Left   zero is 1500
-        #self.offset_raw_leg_3=[1100,997-511,2957+1022]  #leg 3  Back Right    3150
-        #self.offset_raw_leg_4=[1050-100,2535-511,2488+1022]  #leg 4  Back left     1000
+        # New offsets 25 Nov
+        self.offset_raw_leg_1=[2047+20,1023,2045] #leg 1   Front Right zero 1 is 2625
+        self.offset_raw_leg_2=[2559-50,1023,2556] #leg 2  Front Left   zero is 1500 # maybe remove -50
+        self.offset_raw_leg_3=[1023+20,511,4095]  #leg 3  Back Right    3150
+        self.offset_raw_leg_4=[1023+50,2047,3583]  #leg 4  Back left     1000
 
         self.offset_raw=np.append(np.append(np.append(self.offset_raw_leg_1,self.offset_raw_leg_2),self.offset_raw_leg_3),self.offset_raw_leg_4)
 

@@ -21,7 +21,6 @@ class QuadLeg:
             # positions from Gazebo are [0, 0, 0], so to fix internal
             # kinematics
             self.joint_initial = np.array([0.0, 0.0, 0.0])
-            #pass
             #self.joint_initial = joints
 
 
@@ -40,7 +39,7 @@ class QuadLeg:
 
         self.l1 = 0.065
         self.l2 = 0.26
-        self.l3 = 0.26
+        self.l3 = 0.267
 
         self.__setDHParams()
         self.setJointPositions(self.joints)
@@ -55,16 +54,15 @@ class QuadLeg:
 
         self.__setDHParams()
         self.__computeForwardKinematics()
-        #se
 
 
     def __setDHParams(self):
-        # denavit hartenburg parameters
+        # denavit hartenberg parameters
         # [alpha, a, d, theta]
         self.dhLink1 = np.array([math.pi/2, 0, 0, self.joints[0]])
         self.dhLink2 = np.array([0, self.l1, 0, -math.pi/2])
         self.dhLink3 = np.array([-math.pi/2, 0, 0, self.joints[1]])
-        self.dhLink4 = np.array([0, self.l2, 0, self.joints[2]])
+        self.dhLink4 = np.array([0, self.l2, 0, self.joints[2]]+np.deg2rad(15))
         self.dhLink5 = np.array([0, self.l3, 0, 0]) #end effector aka foot
 
     def __computeForwardKinematics(self):
@@ -124,7 +122,7 @@ class QuadLeg:
 
         R = (x**2 + y**2 + z**2 - l1**2 - l2**2 - l3**2)/(2*l2*l3)
         if R > 1.0:
-            #print("Not a feasible position")
+            # Not a feasible position
             return self.joints - self.joint_initial
 
         joint = np.zeros(3)
@@ -134,10 +132,10 @@ class QuadLeg:
 
         # functions as long as q3 > 0 so no q <= 0
         if self.side == "left":
-            joint[2] = math.atan2(math.sqrt(1 - R**2), R)
+            joint[2] = math.atan2(math.sqrt(1 - R**2), R) + np.deg2rad(8.746) #np.deg2rad(15)
 
         else:
-            joint[2] = math.atan2(-math.sqrt(1 - R**2), R)
+            joint[2] = math.atan2(-math.sqrt(1 - R**2), R) - np.deg2rad(8.746)
 
 
         # functions as long as q3 > 0 so AGAIN no 1 <=0

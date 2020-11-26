@@ -63,6 +63,8 @@ class Quadruped:
         self.y_local_goal = self.COM[1]
         self.z_local_goal = self.COM[2]
 
+        self.feet_sensor_readings = np.zeros((4,3))
+
         self.commandFrequency = 85
         self.gait = Gait(self,frequency = self.commandFrequency)
 
@@ -78,7 +80,7 @@ class Quadruped:
 
         if self.simulation == False:
             #self.leg_con = leg_connection(name_serial_port='/dev/ttyACM0',using_current=True)
-            self.leg_con = leg_connection(name_serial_port='/dev/ttyACM0')
+            self.leg_con = leg_connection(name_serial_port='/dev/ttyACM1')
             self.time_frequency = time.time()
             self.stateUpdateFrequency = 85 # hz
             time.sleep(3)
@@ -163,8 +165,6 @@ class Quadruped:
             ts = int(round(time.time() * 1000))
 
             if self.readyToWalk == True:
-                #print(self.gait.phase)
-
 
                 if self.gaitStyle == 0:
                     moving, q0,q1,q2,q3 = self.gait.waveGait(self.ang_vel, self.z_local_goal, self.y_local_goal)
@@ -377,11 +377,13 @@ class Quadruped:
                 if np.array_equal(q3,q[2]) == False:
                     if np.array_equal(q4,q[3]) == False:
                         self.legs[0].x_local_goal +=  width
-                        self.legs[1].x_local_goal -=  width
-                        self.legs[2].x_local_goal -=  width
+                        self.legs[1].x_local_goal +=  width
+                        self.legs[2].x_local_goal +=  width
                         self.legs[3].x_local_goal +=  width
                         #self.x_local_goal += width
         q = np.array(q)
+        q[1][0] = -q[1][0]
+        q[2][0] = -q[2][0]
         self.sendJointCommand(q)
 
     def deltaY(self, delta):
@@ -599,16 +601,15 @@ class Quadruped:
         q2 = self.legs[1].computeLocalInverseKinematics(np.array([self.legs[1].x_local_goal, self.legs[1].y_local_goal, self.legs[1].z_local_goal]))
         q3 = self.legs[2].computeLocalInverseKinematics(np.array([self.legs[2].x_local_goal, self.legs[2].y_local_goal, self.legs[2].z_local_goal]))
         q4 = self.legs[3].computeLocalInverseKinematics(np.array([self.legs[3].x_local_goal, self.legs[3].y_local_goal, self.legs[3].z_local_goal]))
-
         if leg == 1:
             q1 = self.legs[0].computeLocalInverseKinematics(np.array([x, self.legs[0].y_local_goal, self.legs[0].z_local_goal]))
 
         elif leg == 2:
             q2 = self.legs[1].computeLocalInverseKinematics(np.array([x, self.legs[1].y_local_goal, self.legs[1].z_local_goal]))
-
+            q2[0] = -q2[0]
         elif leg == 3:
             q3 = self.legs[2].computeLocalInverseKinematics(np.array([x, self.legs[2].y_local_goal, self.legs[2].z_local_goal]))
-
+            q3[0] = -q3[0]
         elif leg == 4:
             q4 = self.legs[3].computeLocalInverseKinematics(np.array([x, self.legs[3].y_local_goal, self.legs[3].z_local_goal]))
 
@@ -617,11 +618,30 @@ class Quadruped:
         if leg == 1:
             self.legs[0].x_local_goal = x
         elif leg == 2:
-            self.legs[1].x_local_goal = -x
+            self.legs[1].x_local_goal = x
         elif leg == 3:
-            self.legs[2].x_local_goal = -x
+            self.legs[2].x_local_goal = x
         elif leg == 4:
             self.legs[3].x_local_goal = x
+
+        self.sendJointCommand(joints)
+
+    def setAllLegX(self, x):
+
+
+        q1 = self.legs[0].computeLocalInverseKinematics(np.array([x, self.legs[0].y_local_goal, self.legs[0].z_local_goal]))
+        q2 = self.legs[1].computeLocalInverseKinematics(np.array([x, self.legs[1].y_local_goal, self.legs[1].z_local_goal]))
+        q2[0] = -q2[0]
+        q3 = self.legs[2].computeLocalInverseKinematics(np.array([x, self.legs[2].y_local_goal, self.legs[2].z_local_goal]))
+        q3[0] = -q3[0]
+        q4 = self.legs[3].computeLocalInverseKinematics(np.array([x, self.legs[3].y_local_goal, self.legs[3].z_local_goal]))
+
+        joints = np.array([q1,q2,q3,q4])
+
+        self.legs[0].x_local_goal = x
+        self.legs[1].x_local_goal = x
+        self.legs[2].x_local_goal = x
+        self.legs[3].x_local_goal = x
 
         self.sendJointCommand(joints)
 
@@ -673,7 +693,7 @@ class Quadruped:
 
             jointArr = np.array(jointArr)
             self.COM = self.getCOM(jointArr, swingArr)
-            print("COM: ", self.COM)
+            #print("COM: ", self.COM)
             te = int(round(time.time() * 1000))
             t_sleep = (t_period-((te-ts))*0.001)
             if t_sleep > 0:
@@ -686,6 +706,7 @@ class Quadruped:
         self.legs[2].setJointPositions(-current_pos[3:6])##fron left # correct
         self.legs[3].setJointPositions(current_pos[6:9])##back right # correct
         self.legs[1].setJointPositions(-current_pos[9:12])##back left
+        self.feet_sensor_readings = feet 
 
         #fr fl br bl
         csv_string = str(self.gait.t) + "," + str(self.legs[0].joints).replace("[","").replace("]","").replace(" ", ",") + str(self.legs[1].joints).replace("[","").replace("]","").replace(" ", ",") + str(self.legs[2].joints).replace("[","").replace("]","").replace(" ", ",") + str(self.legs[3].joints).replace("[","").replace("]","").replace(" ", ",") + "," + str(feet[0]) + "," + str(feet[3]) + "," + str(feet[1]) + "," + str(feet[2]) + str(imu[0]) + "\n"

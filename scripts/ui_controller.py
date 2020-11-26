@@ -9,6 +9,7 @@ from math import pi
 
 from quadruped import Quadruped
 from transform import *
+import time
 
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
 
@@ -53,8 +54,10 @@ def function(id):
             quadruped.gait.setStepHeight(val)
 
         elif id == 14:
-            for i in range(len(quadruped.legs)):
-                quadruped.setLegX(leg = i+1, x = val)
+            #for i in range(len(quadruped.legs)):
+            #    quadruped.setLegX(leg = i+1, x = val)
+            #    time.sleep(0.1)
+            quadruped.setAllLegX(x=val)
 
 
         elif id == 15:
@@ -162,7 +165,8 @@ joint_sliders.append(tk.Scale((root), from_=-0.52, to=0.0, resolution=0.01, leng
 joint_sliders[-1].set(-0.25)
 joint_sliders.append(tk.Scale((root), from_=0.1, to=100.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(12)))
 joint_sliders.append(tk.Scale((root), from_=0.1, to=1, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(13)))
-joint_sliders.append(tk.Scale((root), from_=-0.2, to=0.2, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(14)))
+joint_sliders.append(tk.Scale((root), from_=-0.2, to=0.2, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(14)))
+joint_sliders[-1].set(0.065)
 joint_sliders.append(tk.Scale((root), from_=-0.2, to=.2, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(15)))
 joint_sliders[-1].set(-0.)
 joint_sliders.append(tk.Scale((root), from_=-0.2, to=0.2, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(16)))
