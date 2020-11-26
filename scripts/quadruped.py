@@ -80,7 +80,7 @@ class Quadruped:
 
         if self.simulation == False:
             #self.leg_con = leg_connection(name_serial_port='/dev/ttyACM0',using_current=True)
-            self.leg_con = leg_connection(name_serial_port='/dev/ttyACM1')
+            self.leg_con = leg_connection(name_serial_port='/dev/ttyACM0')
             self.time_frequency = time.time()
             self.stateUpdateFrequency = 85 # hz
             time.sleep(3)
@@ -706,7 +706,7 @@ class Quadruped:
         self.legs[2].setJointPositions(-current_pos[3:6])##fron left # correct
         self.legs[3].setJointPositions(current_pos[6:9])##back right # correct
         self.legs[1].setJointPositions(-current_pos[9:12])##back left
-        self.feet_sensor_readings = feet 
+        self.feet_sensor_readings = feet
 
         #fr fl br bl
         csv_string = str(self.gait.t) + "," + str(self.legs[0].joints).replace("[","").replace("]","").replace(" ", ",") + str(self.legs[1].joints).replace("[","").replace("]","").replace(" ", ",") + str(self.legs[2].joints).replace("[","").replace("]","").replace(" ", ",") + str(self.legs[3].joints).replace("[","").replace("]","").replace(" ", ",") + "," + str(feet[0]) + "," + str(feet[3]) + "," + str(feet[1]) + "," + str(feet[2]) + str(imu[0]) + "\n"

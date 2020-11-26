@@ -81,10 +81,10 @@ class Gait:
 
         # COM manipulation between swing phases
         # Described in deltas: COM_x, COM_y, legFR_z, legBL_z, legFL_z, legBR_z
-        self.COMDelta = np.array([[0, 0, 0, 0.05, 0.05, 0],
-                                [0, 0, 0.05, -0.0, -0.0, 0.05]])
-        #self.COMDelta = np.array([[0, 0, 0, 0.0, 0.0, 0],
-        #                        [0, 0, 0.0, -0.0, -0.0, 0.0]])
+        #self.COMDelta = np.array([[0, 0, 0, 0.07, 0.07, 0],
+        #                        [0, 0, 0.07, -0.0, -0.0, 0.07]])
+        self.COMDelta = np.array([[0, 0, 0, 0.0, 0.0, 0],
+                                [0, 0, 0.0, -0.0, -0.0, 0.0]])
 
         # phase offsets for front right, back left, front left, back right
         self.phaseOffset = np.array([0.5, self.dutyCycle-self.swingTime, 0.0, self.dutyCycle-0.5-self.swingTime])
@@ -142,6 +142,8 @@ class Gait:
                     y = -y
                 legAng[i] = self.quad.legs[i].computeLocalInverseKinematics(np.array([self.quad.legs[i].x_local_goal, y, z + self.legsDelta[i][2]]))
                 self.quad.legs[i].swing = False
+        legAng[1][0] = -legAng[1][0]
+        legAng[2][0] = -legAng[2][0]
 
         swing = []
         for i in range(len(self.quad.legs)):
