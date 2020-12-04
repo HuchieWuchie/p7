@@ -10,6 +10,7 @@ from math import pi
 from quadruped import Quadruped
 from transform import *
 import time
+import math
 
 np.set_printoptions(formatter={'float': lambda x: "{0:0.4f}".format(x)})
 
@@ -22,13 +23,16 @@ def function(id):
         val = joint_sliders[id].get()
 
         if id == 0:
-            quadruped.deltaX(val)
+            quadruped.setX(val)
 
         elif id == 1:
             quadruped.setY(val)
 
         elif id == 2:
             quadruped.setZ(val)
+
+        elif id == 3:
+            joint_state = quadruped.setRoll(val)
 
         elif id == 6:
             quadruped.setAngularVelocity(val)
@@ -53,6 +57,7 @@ def function(id):
         elif id == 13:
             quadruped.gait.setStepHeight(val)
 
+
         elif id == 14:
             #for i in range(len(quadruped.legs)):
             #    quadruped.setLegX(leg = i+1, x = val)
@@ -71,9 +76,19 @@ def function(id):
 
         elif id == 18:
             quadruped.setLegY(2, val)
+
+        elif id == 19:
+
+            """
+            z = -0.35
+            x = 0.065
+            r = math.sqrt(pow(z,2) + pow(x,2))
+            leg = 1
+            quadruped.forkFunc(leg, val, r)
+            """
+            quadruped.rollLeg(val)
         """
-        elif id == 3:
-            joint_state = quadruped.setRoll(val)
+
 
         elif id == 4:
             joint_state = quadruped.setPitch(val)
@@ -133,6 +148,7 @@ labels.append(tk.Label(root, text="Leg front right y: "))
 labels.append(tk.Label(root, text="Leg front left y: "))
 labels.append(tk.Label(root, text="Leg back right y: "))
 labels.append(tk.Label(root, text="Leg back left y: "))
+labels.append(tk.Label(root, text="Fork: "))
 labels.append(tk.Label(root, text="Activate gait: "))
 labels.append(tk.Label(root, text="Increase x: "))
 labels.append(tk.Label(root, text="Decrease x: "))
@@ -144,7 +160,7 @@ for i in range(len(labels)):
 joint_sliders = []
 
 
-joint_sliders.append(tk.Scale((root), from_=-0.05, to=0.05, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(0)))
+joint_sliders.append(tk.Scale((root), from_=-0.5, to=0.5, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(0)))
 #joint_sliders[-1].set(quadruped.COM[0])
 joint_sliders.append(tk.Scale((root), from_=-0.6, to=0.6, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(1)))
 joint_sliders[-1].set(quadruped.COM[1])
@@ -174,6 +190,8 @@ joint_sliders[-1].set(-0.)
 joint_sliders.append(tk.Scale((root), from_=-0.2, to=0.2, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(17)))
 joint_sliders[-1].set(-0.)
 joint_sliders.append(tk.Scale((root), from_=-0.2, to=0.2, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(18)))
+joint_sliders[-1].set(-0.)
+joint_sliders.append(tk.Scale((root), from_=-0.4, to=0.5, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(19)))
 joint_sliders[-1].set(-0.)
 
 joint_sliders.append(tk.Button((root), text="Gait activate", command=changeGait))

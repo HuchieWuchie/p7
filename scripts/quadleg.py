@@ -59,10 +59,16 @@ class QuadLeg:
     def __setDHParams(self):
         # denavit hartenberg parameters
         # [alpha, a, d, theta]
+        #self.dhLink1 = np.array([math.pi/2, 0, 0, self.joints[0]])
+        #self.dhLink2 = np.array([0, self.l1, 0, -math.pi/2])
+        #self.dhLink3 = np.array([-math.pi/2, 0, 0, self.joints[1]])
+        #self.dhLink4 = np.array([0, self.l2, 0, self.joints[2]+np.deg2rad(8.746)])
+        #self.dhLink5 = np.array([0, self.l3, 0, 0]) #end effector aka foot
+
         self.dhLink1 = np.array([math.pi/2, 0, 0, self.joints[0]])
         self.dhLink2 = np.array([0, self.l1, 0, -math.pi/2])
         self.dhLink3 = np.array([-math.pi/2, 0, 0, self.joints[1]])
-        self.dhLink4 = np.array([0, self.l2, 0, self.joints[2]]+np.deg2rad(15))
+        self.dhLink4 = np.array([0, self.l2, 0, self.joints[2]])
         self.dhLink5 = np.array([0, self.l3, 0, 0]) #end effector aka foot
 
     def __computeForwardKinematics(self):
@@ -132,15 +138,16 @@ class QuadLeg:
 
         # functions as long as q3 > 0 so no q <= 0
         if self.side == "left":
-            joint[2] = math.atan2(math.sqrt(1 - R**2), R) + np.deg2rad(8.746) #np.deg2rad(15)
-
+            joint[2] = math.atan2(math.sqrt(1 - R**2), R)# + np.deg2rad(8.746) # original
         else:
-            joint[2] = math.atan2(-math.sqrt(1 - R**2), R) - np.deg2rad(8.746)
+            joint[2] = math.atan2(-math.sqrt(1 - R**2), R)# - np.deg2rad(8.746) # original
 
-
+        joint[1] = math.atan2(y, math.sqrt(pow(x,2)+pow(z,2) - pow(l1,2))) - math.atan2(self.l3*math.sin(joint[2]), self.l2+self.l3*math.cos(joint[2]))#+np.deg2rad(8.746)
         # functions as long as q3 > 0 so AGAIN no 1 <=0
-        joint[1] = math.atan2(y, math.sqrt(pow(x,2)+pow(z,2) - pow(l1,2))) - math.atan2(self.l3*math.sin(joint[2]), self.l2+self.l3*math.cos(joint[2]))
-
+        if self.side == "left":
+            joint[2] += np.deg2rad(8.746)
+        else:
+            joint[2] -= np.deg2rad(8.746)
         joint = joint - self.joint_initial
 
         return joint

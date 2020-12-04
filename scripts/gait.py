@@ -81,10 +81,10 @@ class Gait:
 
         # COM manipulation between swing phases
         # Described in deltas: COM_x, COM_y, legFR_z, legBL_z, legFL_z, legBR_z
-        #self.COMDelta = np.array([[0, 0, 0, 0.07, 0.07, 0],
-        #                        [0, 0, 0.07, -0.0, -0.0, 0.07]])
-        self.COMDelta = np.array([[0, 0, 0, 0.0, 0.0, 0],
-                                [0, 0, 0.0, -0.0, -0.0, 0.0]])
+        self.COMDelta = np.array([[0, 0, 0, 0.07, 0.07, 0],
+                                [0, 0, 0.07, -0.0, -0.0, 0.07]])
+        #self.COMDelta = np.array([[0.05, 0, 0, 0.0, 0.0, 0],
+        #                        [-0.05, 0, 0.0, -0.0, -0.0, 0.0]])
 
         # phase offsets for front right, back left, front left, back right
         self.phaseOffset = np.array([0.5, self.dutyCycle-self.swingTime, 0.0, self.dutyCycle-0.5-self.swingTime])
@@ -251,6 +251,11 @@ class Gait:
             self.supportPhase = 0
             prevIdx = -1
 
+        #if self.quad.COM[0] > self.COMDelta[self.supportPhase][0]:
+        #     self.quad.deltaX(-abs((self.COMDelta[self.supportPhase][0]-self.COMDelta[prevIdx][0]) * self.COMTime))
+
+        #else:
+        #    self.quad.deltaX(abs((self.COMDelta[self.supportPhase][0]-self.COMDelta[prevIdx][0]) * self.COMTime))
         for i in range(len(self.legsDelta)):
 
             if self.legsDelta[i][2] > self.COMDelta[self.supportPhase][2+i]:
@@ -262,27 +267,8 @@ class Gait:
                 self.legsDelta[i][1] -= abs((self.COMDelta[self.supportPhase][1]-self.COMDelta[prevIdx][1]) * self.COMTime)
             else:
                 self.legsDelta[i][1] += abs((self.COMDelta[self.supportPhase][1]-self.COMDelta[prevIdx][1]) * self.COMTime)
-        """
-        if self.legsDelta[0][2] > self.COMDelta[self.supportPhase][2]:
-            self.legsDelta[0][2] -= abs((self.COMDelta[self.supportPhase][2]-self.COMDelta[prevIdx][2]) * self.COMTime)
-        else:
-            self.legsDelta[0][2] += abs((self.COMDelta[self.supportPhase][2]-self.COMDelta[prevIdx][2]) * self.COMTime)
 
-        if self.legsDelta[1][2] > self.COMDelta[self.supportPhase][3]:
-            self.legsDelta[1][2] -= abs((self.COMDelta[self.supportPhase][3]-self.COMDelta[prevIdx][3]) * self.COMTime)
-        else:
-            self.legsDelta[1][2] += abs((self.COMDelta[self.supportPhase][3]-self.COMDelta[prevIdx][3]) * self.COMTime)
 
-        if self.legsDelta[2][2] > self.COMDelta[self.supportPhase][4]:
-            self.legsDelta[2][2] -= abs((self.COMDelta[self.supportPhase][4]-self.COMDelta[prevIdx][4]) * self.COMTime)
-        else:
-            self.legsDelta[2][2] += abs((self.COMDelta[self.supportPhase][4]-self.COMDelta[prevIdx][4]) * self.COMTime)
-
-        if self.legsDelta[3][2] > self.COMDelta[self.supportPhase][5]:
-            self.legsDelta[3][2] -= abs((self.COMDelta[self.supportPhase][5]-self.COMDelta[prevIdx][5]) * self.COMTime)
-        else:
-            self.legsDelta[3][2] += abs((self.COMDelta[self.supportPhase][5]-self.COMDelta[prevIdx][5]) * self.COMTime)
-        """
         #print(self.supportPhase, self.legsDelta, abs((self.COMDelta[self.supportPhase][5]-self.COMDelta[prevIdx][5]) * self.COMTime), self.COMDelta[self.supportPhase][5])
     def bezierCurveCLinear(self, p0, p1, t):
         """returns position as a function of parameter t"""

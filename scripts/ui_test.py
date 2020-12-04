@@ -22,7 +22,7 @@ class Circle:
     def __init__(self, quadruped):
         self.setCycleTime(10)
         self.setRadius(7.5)
-        self.setLeg(3)
+        self.setLeg(0)
         self.t = 0
         self.setFrequency(75) # 70 works
         self.getTResolution()
