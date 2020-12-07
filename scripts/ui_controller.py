@@ -34,6 +34,9 @@ def function(id):
         elif id == 3:
             joint_state = quadruped.setRoll(val)
 
+        elif id == 4:
+            joint_state = quadruped.setPitch(val)
+
         elif id == 6:
             quadruped.setAngularVelocity(val)
 

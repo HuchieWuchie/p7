@@ -47,7 +47,9 @@ class QuadLeg:
         self.x_local_goal = xyz[0]
         self.y_local_goal = xyz[1]
         self.z_local_goal = xyz[2]
+        self.x_global_goal = xyz[0]
         self.y_global_goal = xyz[1]
+        self.z_global_goal = xyz[2]
 
     def setJointPositions(self, joints=np.array([0.0, -1.0, 2.0])):
         """In radians """
@@ -155,3 +157,12 @@ class QuadLeg:
 
     def getEEPosition(self):
         return self.EE
+
+    def setXGlobal(self, x):
+        self.x_global_goal = x
+
+    def setYGlobal(self, y):
+        self.y_global_goal = y
+
+    def setZGlobal(self, z):
+        self.z_global_goal = z
