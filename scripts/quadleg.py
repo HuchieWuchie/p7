@@ -44,9 +44,9 @@ class QuadLeg:
         self.__setDHParams()
         self.setJointPositions(self.joints)
         xyz = self.computeLocalForwardKinematics(self.joints)
-        self.x_local_goal = xyz[0]
-        self.y_local_goal = xyz[1]
-        self.z_local_goal = xyz[2]
+        self.x_local_goal = 0#xyz[0]
+        self.y_local_goal = 0#xyz[1]
+        self.z_local_goal = 0#xyz[2]
         self.x_global_goal = xyz[0]
         self.y_global_goal = xyz[1]
         self.z_global_goal = xyz[2]
@@ -125,9 +125,9 @@ class QuadLeg:
         l2 = self.l2
         l3 = self.l3
 
-        self.x_local_goal = x
-        self.y_local_goal = y
-        self.z_local_goal = z
+        #self.x_local_goal = x
+        #self.y_local_goal = y
+        #self.z_local_goal = z
 
         R = (x**2 + y**2 + z**2 - l1**2 - l2**2 - l3**2)/(2*l2*l3)
         if R > 1.0:

@@ -37,23 +37,26 @@ def function(id):
         elif id == 4:
             joint_state = quadruped.setPitch(val)
 
+        elif id == 5:
+            joint_state = quadruped.setYaw(val)
+
         elif id == 6:
-            quadruped.setAngularVelocity(val)
+            quadruped.setWidth(val)
 
         elif id == 7:
             quadruped.gait.setStepSize(val)
 
         elif id == 8:
-            quadruped.setLegZ(1, val)
+            quadruped.gait.td1 = val
 
         elif id == 9:
-            quadruped.setLegZ(3, val)
+            quadruped.gait.td2 = val
 
         elif id == 10:
-            quadruped.setLegZ(4, val)
+            quadruped.gait.xDelta = val
 
         elif id == 11:
-            quadruped.setLegZ(2, val)
+            quadruped.gait.zDelta = -val
         elif id == 12:
             quadruped.gait.setCycleTime(val)
 
@@ -90,20 +93,11 @@ def function(id):
             quadruped.forkFunc(leg, val, r)
             """
             quadruped.rollLeg(val)
-        """
 
-
-        elif id == 4:
-            joint_state = quadruped.setPitch(val)
-
-        elif id == 5:
-            joint_state = quadruped.setYaw(val)
-        """
     i_limit += 1
 
 def changeGait():
     global rdy
-
     if rdy == 0:
         quadruped.readyToWalk = True
         rdy = 1
@@ -111,11 +105,11 @@ def changeGait():
         quadruped.readyToWalk = False
         rdy = 0
 
-def incrWidth():
-    quadruped.deltaX(0.01)
+def resetIMU():
+    quadruped.resetIMU()
 
-def decrWidth():
-    quadruped.deltaX(-0.01)
+def pidActivate():
+    quadruped.angle_pid = True
 
 rdy = 0
 sim = False
@@ -138,12 +132,12 @@ labels.append(tk.Label(root, text="Z: "))
 labels.append(tk.Label(root, text="Roll: "))
 labels.append(tk.Label(root, text="Pitch: "))
 labels.append(tk.Label(root, text="Yaw: "))
-labels.append(tk.Label(root, text="Angular Velocity: "))
+labels.append(tk.Label(root, text="Stance width: "))
 labels.append(tk.Label(root, text="Step Size: "))
-labels.append(tk.Label(root, text="Leg front right z: "))
-labels.append(tk.Label(root, text="Leg front left z: "))
-labels.append(tk.Label(root, text="Leg back right z: "))
-labels.append(tk.Label(root, text="Leg back left z: "))
+labels.append(tk.Label(root, text="td1 FL/BR: "))
+labels.append(tk.Label(root, text="td2 FR/BL: "))
+labels.append(tk.Label(root, text="xDelta: "))
+labels.append(tk.Label(root, text="zDelta: "))
 labels.append(tk.Label(root, text="Phase time: "))
 labels.append(tk.Label(root, text="Step height: "))
 labels.append(tk.Label(root, text="Set all leg x: "))
@@ -153,8 +147,8 @@ labels.append(tk.Label(root, text="Leg back right y: "))
 labels.append(tk.Label(root, text="Leg back left y: "))
 labels.append(tk.Label(root, text="Fork: "))
 labels.append(tk.Label(root, text="Activate gait: "))
-labels.append(tk.Label(root, text="Increase x: "))
-labels.append(tk.Label(root, text="Decrease x: "))
+labels.append(tk.Label(root, text="Reset IMU: "))
+labels.append(tk.Label(root, text="Activate PID angle control: "))
 
 
 for i in range(len(labels)):
@@ -163,7 +157,7 @@ for i in range(len(labels)):
 joint_sliders = []
 
 
-joint_sliders.append(tk.Scale((root), from_=-0.5, to=0.5, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(0)))
+joint_sliders.append(tk.Scale((root), from_=-0.07, to=0.07, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(0)))
 #joint_sliders[-1].set(quadruped.COM[0])
 joint_sliders.append(tk.Scale((root), from_=-0.6, to=0.6, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(1)))
 joint_sliders[-1].set(quadruped.COM[1])
@@ -171,19 +165,19 @@ joint_sliders.append(tk.Scale((root), from_=-0.6, to=0.4, resolution=0.001, leng
 joint_sliders[-1].set(quadruped.COM[2])
 joint_sliders.append(tk.Scale((root), from_=-0.4, to=0.4, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(3)))
 joint_sliders.append(tk.Scale((root), from_=-0.4, to=0.4, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(4)))
-joint_sliders.append(tk.Scale((root), from_=-0.4, to=0.4, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(5)))
-joint_sliders.append(tk.Scale((root), from_=0, to=1.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(6)))
+joint_sliders.append(tk.Scale((root), from_=-0.9, to=0.9, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(5)))
+joint_sliders.append(tk.Scale((root), from_=-0.1, to=0.2, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(6)))
 joint_sliders.append(tk.Scale((root), from_=0.0, to=1.5, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(7)))
-joint_sliders.append(tk.Scale((root), from_=-0.52, to=0.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(8)))
-joint_sliders[-1].set(-0.25)
-joint_sliders.append(tk.Scale((root), from_=-0.52, to=0.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(9)))
-joint_sliders[-1].set(-0.25)
-joint_sliders.append(tk.Scale((root), from_=-0.52, to=0.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(10)))
-joint_sliders[-1].set(-0.25)
-joint_sliders.append(tk.Scale((root), from_=-0.52, to=0.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(11)))
-joint_sliders[-1].set(-0.25)
+joint_sliders.append(tk.Scale((root), from_=0.0, to=1.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(8)))
+joint_sliders[-1].set(0.375)
+joint_sliders.append(tk.Scale((root), from_=-0.0, to=1.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(9)))
+joint_sliders[-1].set(0.875)
+joint_sliders.append(tk.Scale((root), from_=-0.1, to=0.1, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(10)))
+joint_sliders[-1].set(0.0)
+joint_sliders.append(tk.Scale((root), from_=-0.0, to=0.1, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(11)))
+joint_sliders[-1].set(0.0)
 joint_sliders.append(tk.Scale((root), from_=0.1, to=100.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(12)))
-joint_sliders.append(tk.Scale((root), from_=0.1, to=1, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(13)))
+joint_sliders.append(tk.Scale((root), from_=0.0, to=1, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(13)))
 joint_sliders.append(tk.Scale((root), from_=-0.2, to=0.2, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(14)))
 joint_sliders[-1].set(0.065)
 joint_sliders.append(tk.Scale((root), from_=-0.2, to=.2, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(15)))
@@ -198,8 +192,8 @@ joint_sliders.append(tk.Scale((root), from_=-0.4, to=0.5, resolution=0.01, lengt
 joint_sliders[-1].set(-0.)
 
 joint_sliders.append(tk.Button((root), text="Gait activate", command=changeGait))
-joint_sliders.append(tk.Button((root), text="Increase leg width", command=incrWidth))
-joint_sliders.append(tk.Button((root), text="Decrease leg width", command=decrWidth))
+joint_sliders.append(tk.Button((root), text="Reset IMU", command=resetIMU))
+joint_sliders.append(tk.Button((root), text="Activate PID angle control", command=pidActivate))
 
 for i in range(len(joint_sliders)):
     joint_sliders[i].grid(row=i, column=2)

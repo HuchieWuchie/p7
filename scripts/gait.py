@@ -19,7 +19,12 @@ class Gait:
         self.setStepHeight(0.1) # currently not used
         self.setStepSize(0.05) # currently not used
         self.setDutyCycle(0.875)
+        #self.setDutyCycle(0.751)
         self.setCycleTime(30.0)
+        self.td1 = 0.375
+        self.td2 = 0.875
+        self.xDelta = 0
+        self.zDelta = 0
 
         self.getTResolution()
         self.getCOMTransitionTime()
@@ -93,7 +98,7 @@ class Gait:
         #self.COMDelta = np.array([[0, 0, 0, 0.0, 0.0, 0],
         #                        [0, 0, 0.0, -0.0, -0.0, 0.0]])
 
-        #self.phaseOffset = np.array([0.0, 0.0, 0.5, 0.5]) # trot
+        self.phaseOffset = np.array([0.0, 0.0, 0.5, 0.5]) # trot
         #self.phaseOffset = np.array([0.0, 0.5, 0.0, 0.5]) # pronking
 
         if self.t > 0.0 and self.t <= 0.5:
@@ -103,7 +108,6 @@ class Gait:
             self.supportPhase = 1
 
         legAng = np.zeros((4,3))
-        self.getDelta()
 
         for i in range(len(self.quad.legs)):
 
@@ -115,14 +119,12 @@ class Gait:
 
                 # do swing cycle here
                 t = (self.t - tStart) / self.swingTime # compute swing phase t parameterization resolution
-                y, z = self.trajectorySwingYZ(-yCOM, zCOM, self.stepSize, t)
-                x_goal = self.quad.legs[i].x_local_goal
-                x, _ = self.trajectorySwingXZ(self.quad.legs[i].x_local_goal, zCOM, t, self.quad.legs[i].name)
-                if self.quad.legs[i].side == "right":
-                    y = -y
-                legAng[i] = self.quad.legs[i].computeLocalInverseKinematics(np.array([x, y, z]))
-                self.quad.legs[i].x_local_goal = x_goal
-                self.quad.legs[i].swing = True
+                y, z = self.trajectorySwingYZ(-0, 0, self.stepSize, t)
+                x, _ = self.trajectorySwingXZ(0, 0, t, self.quad.legs[i].name)
+                self.quad.legs[i].x_local_goal = x
+                self.quad.legs[i].y_local_goal = -y
+                self.quad.legs[i].z_local_goal = z
+                self.quad.legs[i].swing = False
 
             else:
 
@@ -137,13 +139,23 @@ class Gait:
                 else:
                     t = (self.t - firstSupportPhase - self.swingTime) / self.dutyCycle
 
-                y, z = self.trajectoryStance(-yCOM, zCOM, self.stepSize, t)
-                if self.quad.legs[i].side == "right":
-                    y = -y
-                legAng[i] = self.quad.legs[i].computeLocalInverseKinematics(np.array([self.quad.legs[i].x_local_goal, y, z + self.legsDelta[i][2]]))
+                z = 0
+                x = 0
+                if self.t >= self.td1 and self.t <= self.td1 + self.swingTime:
+                    z = self.zDelta - (((self.t-self.td1)/self.swingTime) * self.zDelta)
+                    x = self.xDelta - (((self.t-self.td1)/self.swingTime) * self.xDelta)
+                elif self.t >= self.td2 and self.t <= self.td2 + self.swingTime:
+                    z = self.zDelta - (((self.t-self.td2)/self.swingTime) * self.zDelta)
+                    x = self.xDelta - (((self.t-self.td2)/self.swingTime) * self.xDelta)
+
+                print("t: ", self.t, " i: ", i, "  z: ", z)
+                y, z = self.trajectoryStance(0, z, self.stepSize, t)
+                self.quad.legs[i].x_local_goal = x
+                self.quad.legs[i].y_local_goal = -y
+                self.quad.legs[i].z_local_goal = z
                 self.quad.legs[i].swing = False
-        legAng[1][0] = -legAng[1][0]
-        legAng[2][0] = -legAng[2][0]
+
+
 
         swing = []
         for i in range(len(self.quad.legs)):
@@ -151,9 +163,6 @@ class Gait:
         self.t += self.tRes
         if self.t > 1.0:
             self.t = 0.0
-
-
-        return swing, legAng[0], legAng[1], legAng[2], legAng[3]
 
     def discontinuousGait(self, zCOM, yCOM):
         """ Continuous gait, returns leg angles and booleans for swing phase of legs
@@ -323,4 +332,9 @@ class Gait:
         p0 = np.array([y0+stepSize, z0])
         p1 = np.array([y0, z0])
         y, z = self.bezierCurveCLinear(p0, p1, t)
+        #p0 = np.array([y0+stepSize, z0])
+        #p1 = np.array([y0+stepSize, z0-0.04])
+        #p2 = np.array([y0, z0])
+        #p3 = np.array([y0, z0])
+        #y, z = self.bezierCurveCubic(p0, p1, p2, p3, t)
         return y, z
