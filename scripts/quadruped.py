@@ -10,6 +10,7 @@ from gait import Gait
 from quadleg import QuadLeg
 from quadbody import QuadBody
 import csv
+from simple_pid import PID
 
 import rospy
 from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryActionGoal, FollowJointTrajectoryGoal
@@ -63,7 +64,7 @@ class Quadruped:
         self.COM = self.getCOM(jointArr, swingArr)
         self.x_local_goal = 0
         self.y_local_goal = 0.02
-        self.z_local_goal = -0.37
+        self.z_local_goal = -0.32
         self.x_width_des = 0
         self.roll_des = 0
         self.pitch_des = 0
@@ -75,7 +76,7 @@ class Quadruped:
 
         self.feet_sensor_readings = np.zeros((4,3))
 
-        self.commandFrequency = 45
+        self.commandFrequency = 65
         self.gait = Gait(self,frequency = self.commandFrequency)
 
         self.setTranslationalVelocity(0.0)
@@ -100,8 +101,15 @@ class Quadruped:
         self.pitch_actual = 0
         self.yaw_actual = 0
 
+        self.x_err = 0
+        self.y_err = 0
+        self.z_err = 0
+
         self.pGainRoll = 1
         self.pGainPitch = 1
+        self.pGainZ = 0
+
+
 
         self.angle_pid = False
 
@@ -109,13 +117,18 @@ class Quadruped:
             #self.leg_con = leg_connection(name_serial_port='/dev/ttyACM0',using_current=True)
             self.leg_con = leg_connection(name_serial_port='/dev/ttyACM0')
             self.time_frequency = time.time()
-            self.stateUpdateFrequency = 85 # hz
+            self.stateUpdateFrequency = 65 # hz
             time.sleep(3)
             self.moveThread = threading.Thread(target=self.move).start()
             self.stateReadThread = threading.Thread(target=self.updateState).start()
 
+            self.pidZ = PID(1.0, 0, 0.05)
+            self.pidZ.sample_time = 1.0 / self.stateUpdateFrequency
+            self.pidZ.setpoint = self.z_local_goal
+
         else:
             self.moveThread = threading.Thread(target=self.move).start()
+
 
 
     def setCommandFrequency(self, val):
@@ -149,10 +162,10 @@ class Quadruped:
                 local_ee = self.legs[i].computeLocalForwardKinematics(jointArr[i])
                 if self.legs[i].side == "left":
                     COM[0] += -local_ee[0]
-                    COM[1] += -local_ee[1] #- 0.02 # y COM offset
+                    COM[1] += -local_ee[1]
                 else:
                     COM[0] += local_ee[0]
-                    COM[1] += local_ee[1] #- 0.02
+                    COM[1] += local_ee[1]
                 COM[2] += local_ee[2]
                 nr_contacts += 1
         COM = COM / nr_contacts
@@ -438,6 +451,7 @@ class Quadruped:
     def setZ(self, z):
         z = max(-0.4, min(-0.2, z))
         self.z_local_goal = z
+        self.pidZ.setpoint = self.z_local_goal
         self.computeLegs()
 
     def setWidth(self, w):
@@ -458,7 +472,8 @@ class Quadruped:
 
     def translateZ(self):
         for i in range(len(self.legs)):
-            self.legs[i].setZGlobal(self.legs[i].z_local_goal + self.z_local_goal)
+            #self.legs[i].setZGlobal(self.legs[i].z_local_goal + self.z_local_goal + (self.pGainZ*self.z_err))
+            self.legs[i].setZGlobal(self.legs[i].z_local_goal + self.z_local_goal)# + self.z_err)
 
     def getRollAngle(self, ang):
         q = []
@@ -683,7 +698,12 @@ class Quadruped:
 
             jointArr = np.array(jointArr)
             self.COM = self.getCOM(jointArr, swingArr)
-            #print("COM: ", self.COM)
+            #err = self.z_local_goal - self.COM[2]
+
+            #self.z_err = self.pidZ(self.COM[2])
+            #print(self.z_err, "\t", self.z_local_goal, self.COM[2])
+            #print("COM: ", self.COM, "\t PID output: ", self.z_err, "\t measured: ", self.COM[2], "\t err: ", err)
+
             #if self.readyToWalk == True:
             #    for i in range(len(self.legs)):
             #        print("t: ", self.gait.t, "\t joint ", i, ":    ", self.jointCommands[i] - self.legs[i].joints, "\t swing: ", self.legs[i].swing)
@@ -701,6 +721,7 @@ class Quadruped:
         self.legs[2].setJointPositions(-current_pos[3:6])##fron left # correct
         self.legs[3].setJointPositions(current_pos[6:9])##back right # correct
         self.legs[1].setJointPositions(-current_pos[9:12])##back left
+        print(self.legs[0].joints, "\t", self.legs[1].joints, "\t", self.legs[2].joints, "\t", self.legs[3].joints, "\t",)
         self.feet_sensor_readings = feet
         self.roll_meas = float(imu[0].split(",")[3])
         self.pitch_meas = float(imu[0].split(",")[2])

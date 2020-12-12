@@ -71,7 +71,7 @@ class QuadLeg:
         self.dhLink1 = np.array([math.pi/2, 0, 0, self.joints[0]])
         self.dhLink2 = np.array([0, self.l1, 0, -math.pi/2])
         self.dhLink3 = np.array([-math.pi/2, 0, 0, self.joints[1]])
-        self.dhLink4 = np.array([0, self.l2, 0, self.joints[2]])
+        self.dhLink4 = np.array([0, self.l2, 0, self.joints[2]-np.deg2rad(8.746)])
         self.dhLink5 = np.array([0, self.l3, 0, 0]) #end effector aka foot
 
     def __computeForwardKinematics(self):
@@ -100,7 +100,10 @@ class QuadLeg:
         t01 = transform.denavitToTransform(self.dhLink1[0], self.dhLink1[1], self.dhLink1[2], joint[0])
         t12 = transform.denavitToTransform(self.dhLink2[0], self.dhLink2[1], self.dhLink2[2], self.dhLink2[3])
         t23 = transform.denavitToTransform(self.dhLink3[0], self.dhLink3[1], self.dhLink3[2], joint[1])
-        t34 = transform.denavitToTransform(self.dhLink4[0], self.dhLink4[1], self.dhLink4[2], joint[2])
+        if self.side == "left":
+            t34 = transform.denavitToTransform(self.dhLink4[0], self.dhLink4[1], self.dhLink4[2], joint[2]-np.deg2rad(8.746))
+        else:
+            t34 = transform.denavitToTransform(self.dhLink4[0], self.dhLink4[1], self.dhLink4[2], joint[2]+np.deg2rad(8.746))
         t45 = transform.denavitToTransform(self.dhLink5[0], self.dhLink5[1], self.dhLink5[2], self.dhLink5[3])
 
         t02 = np.matmul(t01, t12)

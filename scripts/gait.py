@@ -21,6 +21,7 @@ class Gait:
         self.setDutyCycle(0.875)
         #self.setDutyCycle(0.751)
         self.setCycleTime(30.0)
+        self.setAngularVelocity(0.0)
         self.td1 = 0.375
         self.td2 = 0.875
         self.xDelta = 0
@@ -73,6 +74,36 @@ class Gait:
         self.dutyCycle = max(0.75, min(1.0, val))
         self.getSwingTime()
 
+    def setStepRotX(self,x):
+        self.stepRotX = x
+
+    def setAngularVelocity(self, vel):
+        self.ang_vel = vel
+        self.setStepRotX(vel*0.1)
+
+    def getTDistribution(self):
+        n = (self.cycleTime * self.swingTime) * self.frequency
+        n = int(n)
+        self.n = n
+
+        sum = 0
+        for i in range(n):
+            j = (2/(n-1)) * i
+            sum += 1 / (1 + pow(2.2,-1+(2*(j))))
+
+        self.divisionConstant = sum
+
+    def getTVelocity(self, n):
+        sum = 0
+        for p in range(n):
+            j = (2/(self.n)) * p
+            res = (1 / (1 + pow(2.2, -1+(2*(j)))))
+            sum += res
+            #print(p, res, sum)
+        sum = sum / self.divisionConstant
+        #print(sum)
+        return sum
+
 
     def getSwingTime(self):
         """ Percentage of gait cycle which a leg will be in swing phase """
@@ -81,8 +112,9 @@ class Gait:
     def waveGait(self, ang_vel, zCOM, yCOM):
         """ Wave gait, returns leg angles and booleans for swing phase of legs
         """
-        self.ang_vel = ang_vel
+        #self.ang_vel = ang_vel
         self.zCOM = zCOM
+        self.getTDistribution()
 
         # COM manipulation between swing phases
         # Described in deltas: COM_x, COM_y, legFR_z, legBL_z, legFL_z, legBR_z
@@ -111,6 +143,19 @@ class Gait:
 
         for i in range(len(self.quad.legs)):
 
+            #stepsize control x
+            stepX= self.stepRotX
+
+            #stepX = self.stepRotX
+            if i == 0:
+                stepX = -stepX
+            elif i == 1:
+                stepX = -stepX
+            elif i == 2:
+                stepX = stepX
+            elif i == 3:
+                stepX = stepX
+
             tStart = self.phaseOffset[i] + self.dutyCycle
             if self.phaseOffset[i] + self.dutyCycle > 1.0:
                 tStart = abs(1.0 - (self.dutyCycle + self.phaseOffset[i]))
@@ -119,8 +164,16 @@ class Gait:
 
                 # do swing cycle here
                 t = (self.t - tStart) / self.swingTime # compute swing phase t parameterization resolution
-                y, z = self.trajectorySwingYZ(-0, 0, self.stepSize, t)
-                x, _ = self.trajectorySwingXZ(0, 0, t, self.quad.legs[i].name)
+                n = int(t * self.cycleTime * self.swingTime * self.frequency)
+                #tRes = self.getTVelocity(n)
+
+                tSwing = self.getTVelocity(n)
+                if tSwing > 1.0:
+                    tSwing = 1.0
+                print(n, tSwing)
+
+                y, z = self.trajectorySwingYZ(-0, 0, self.stepSize, tSwing)
+                x, _ = self.trajectorySwingXZ(0, 0, tSwing, stepX, self.quad.legs[i].name)
                 self.quad.legs[i].x_local_goal = x
                 self.quad.legs[i].y_local_goal = -y
                 self.quad.legs[i].z_local_goal = z
@@ -140,16 +193,39 @@ class Gait:
                     t = (self.t - firstSupportPhase - self.swingTime) / self.dutyCycle
 
                 z = 0
-                x = 0
-                if self.t >= self.td1 and self.t <= self.td1 + self.swingTime:
-                    z = self.zDelta - (((self.t-self.td1)/self.swingTime) * self.zDelta)
-                    x = self.xDelta - (((self.t-self.td1)/self.swingTime) * self.xDelta)
-                elif self.t >= self.td2 and self.t <= self.td2 + self.swingTime:
-                    z = self.zDelta - (((self.t-self.td2)/self.swingTime) * self.zDelta)
-                    x = self.xDelta - (((self.t-self.td2)/self.swingTime) * self.xDelta)
+                xDelta = 0
 
-                print("t: ", self.t, " i: ", i, "  z: ", z)
+
+                if self.t >= self.td1-0.02 and self.t <= self.td1 + self.swingTime + 0.02:
+                    z = -0.01
+                    if self.t >= self.td1 and self.t <= self.td1 + self.swingTime:
+                        z += self.zDelta - (((self.t-self.td1)/self.swingTime) * self.zDelta)
+                        xDelta = self.xDelta - (((self.t-self.td1)/self.swingTime) * self.xDelta)
+
+                elif self.t >= self.td2-0.02 and self.t <= self.td2 + self.swingTime + 0.02:
+                    z = -0.01
+                    if self.t >= self.td2 and self.t <= self.td2 + self.swingTime:
+                        z += self.zDelta - (((self.t-self.td2)/self.swingTime) * self.zDelta)
+                        xDelta = self.xDelta - (((self.t-self.td2)/self.swingTime) * self.xDelta)
+
+                if self.ang_vel < 0:
+                    if i == 0 or i == 1:
+                        xDelta = -xDelta
+                    else:
+                        xDelta = 0
+                elif self.ang_vel > 0:
+                    if i == 2 or i == 3:
+                        xDelta = -xDelta
+                    else:
+                        xDelta = 0
+                else:
+                    xDelta = -xDelta
+
+                x, _ = self.trajectoryStanceXZ(-xDelta, 0, stepX, t)
+
+                #print("t: ", self.t, " i: ", i, "  z: ", z)
                 y, z = self.trajectoryStance(0, z, self.stepSize, t)
+
                 self.quad.legs[i].x_local_goal = x
                 self.quad.legs[i].y_local_goal = -y
                 self.quad.legs[i].z_local_goal = z
@@ -312,18 +388,17 @@ class Gait:
         y, z = self.bezierCurveCubic(p0,p1,p2,p3,t)
         return y, z
 
-    def trajectorySwingXZ(self, x0, z0, t, name=""):
+    def trajectorySwingXZ(self, x0, z0, t, stepX, name=""):
         """ Creates a trajectory for the swing phase in the XZ plane,
         for turning. """
-        ang_vel = 0.1*self.ang_vel
-        if name=="left_front":
-            ang_vel = -ang_vel
-        elif name=="right_back":
-            ang_vel = -ang_vel
+        #if name=="left_front":
+        #    ang_vel = -ang_vel
+        #elif name=="right_back":
+        #    ang_vel = -ang_vel
         p0 = np.array([x0, z0])
         p1 = np.array([x0, z0+self.stepHeight])
-        p2 = np.array([x0+ang_vel+(0.5*ang_vel), z0+self.stepHeight])
-        p3 = np.array([x0+ang_vel, z0])
+        p2 = np.array([x0+stepX+(0.5*stepX), z0+self.stepHeight])
+        p3 = np.array([x0+stepX, z0])
         x, z = self.bezierCurveCubic(p0,p1,p2,p3,t)
         return x, z
 
@@ -338,3 +413,15 @@ class Gait:
         #p3 = np.array([y0, z0])
         #y, z = self.bezierCurveCubic(p0, p1, p2, p3, t)
         return y, z
+
+    def trajectoryStanceXZ(self, x0, z0, stepX, t):
+        """ Support phase trajectory """
+        p0 = np.array([x0+stepX, z0])
+        p1 = np.array([x0, z0])
+        x, z = self.bezierCurveCLinear(p0, p1, t)
+        #p0 = np.array([y0+stepSize, z0])
+        #p1 = np.array([y0+stepSize, z0-0.04])
+        #p2 = np.array([y0, z0])
+        #p3 = np.array([y0, z0])
+        #y, z = self.bezierCurveCubic(p0, p1, p2, p3, t)
+        return x, z

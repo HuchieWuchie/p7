@@ -65,10 +65,7 @@ def function(id):
 
 
         elif id == 14:
-            #for i in range(len(quadruped.legs)):
-            #    quadruped.setLegX(leg = i+1, x = val)
-            #    time.sleep(0.1)
-            quadruped.setAllLegX(x=val)
+            quadruped.gait.setAngularVelocity(val)
 
 
         elif id == 15:
@@ -140,7 +137,7 @@ labels.append(tk.Label(root, text="xDelta: "))
 labels.append(tk.Label(root, text="zDelta: "))
 labels.append(tk.Label(root, text="Phase time: "))
 labels.append(tk.Label(root, text="Step height: "))
-labels.append(tk.Label(root, text="Set all leg x: "))
+labels.append(tk.Label(root, text="Angular velocity: "))
 labels.append(tk.Label(root, text="Leg front right y: "))
 labels.append(tk.Label(root, text="Leg front left y: "))
 labels.append(tk.Label(root, text="Leg back right y: "))
@@ -178,7 +175,7 @@ joint_sliders.append(tk.Scale((root), from_=-0.0, to=0.1, resolution=0.001, leng
 joint_sliders[-1].set(0.0)
 joint_sliders.append(tk.Scale((root), from_=0.1, to=100.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(12)))
 joint_sliders.append(tk.Scale((root), from_=0.0, to=1, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(13)))
-joint_sliders.append(tk.Scale((root), from_=-0.2, to=0.2, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(14)))
+joint_sliders.append(tk.Scale((root), from_=-1.0, to=1.0, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(14)))
 joint_sliders[-1].set(0.065)
 joint_sliders.append(tk.Scale((root), from_=-0.2, to=.2, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(15)))
 joint_sliders[-1].set(-0.)
