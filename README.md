@@ -12,7 +12,12 @@ Two terminals.
 
 1: roslaunch quadruped quadruped_controll.launch
 
-2: python3 scripts/ui_controller.py
+2: python3 velocity_controller.py
+To put the quadruped into a starting position
+
+3: python3 state_updater.py
+
+4. run the MPCros.m script in matlab
 
 ## To do list:
 
