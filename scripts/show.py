@@ -105,9 +105,6 @@ def changeGait():
 def resetIMU():
     quadruped.resetIMU()
 
-def resetOdom():
-    quadruped.resetOdom()
-
 def pidActivate():
     quadruped.angle_pid = True
 
@@ -117,7 +114,6 @@ i_limit = 0
 
 if sim == True:
     rospy.init_node('kinematics_node', disable_signals=True)
-rospy.init_node('kinematics_node', disable_signals=True)
 
 quadruped = Quadruped(simulation=sim)
 print(quadruped.feet_sensor_readings)
@@ -167,9 +163,9 @@ joint_sliders.append(tk.Scale((root), from_=-0.6, to=0.4, resolution=0.001, leng
 joint_sliders[-1].set(quadruped.COM[2])
 joint_sliders.append(tk.Scale((root), from_=-0.4, to=0.4, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(3)))
 joint_sliders.append(tk.Scale((root), from_=-0.4, to=0.4, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(4)))
-joint_sliders.append(tk.Scale((root), from_=-3.0, to=3., resolution=0.001, length=400, orient='horizontal', command=lambda x:function(5)))
+joint_sliders.append(tk.Scale((root), from_=-0.9, to=0.9, resolution=0.001, length=400, orient='horizontal', command=lambda x:function(5)))
 joint_sliders.append(tk.Scale((root), from_=-0.1, to=0.2, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(6)))
-joint_sliders.append(tk.Scale((root), from_=-0.2, to=0.2, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(7)))
+joint_sliders.append(tk.Scale((root), from_=0.0, to=1.5, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(7)))
 joint_sliders.append(tk.Scale((root), from_=0.0, to=1.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(8)))
 joint_sliders[-1].set(0.375)
 joint_sliders.append(tk.Scale((root), from_=-0.0, to=1.0, resolution=0.01, length=400, orient='horizontal', command=lambda x:function(9)))
@@ -195,7 +191,7 @@ joint_sliders[-1].set(-0.)
 
 joint_sliders.append(tk.Button((root), text="Gait activate", command=changeGait))
 joint_sliders.append(tk.Button((root), text="Reset IMU", command=resetIMU))
-joint_sliders.append(tk.Button((root), text="Reset odometry", command=resetOdom))
+joint_sliders.append(tk.Button((root), text="Activate PID angle control", command=pidActivate))
 
 for i in range(len(joint_sliders)):
     joint_sliders[i].grid(row=i, column=2)

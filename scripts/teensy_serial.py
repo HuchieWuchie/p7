@@ -49,6 +49,7 @@ class serial_teensy:
             return False,False
 
 
+
     def serial_write(self,output):
         #output=','.join(output)
         #ser.write(str(output).encode('utf-8'))
@@ -63,6 +64,7 @@ class serial_teensy:
             self.ser.write(str(output).encode('utf-8'))
             self.ser.flush()
             self.available=True
+
 
 
     def convert_string_to_ints(self,string_of_numbers):
